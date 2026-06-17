@@ -1,16 +1,19 @@
 {
-  "name": "forum",
+  "name": "yiwanzhe-forum",
   "version": "1.0.0",
-  "description": "",
-  "main": "index.js",
+  "description": "遗忘者归乡论坛 - Node.js + better-sqlite3",
+  "main": "app.js",
   "scripts": {
     "start": "node app.js",
     "dev": "node --watch app.js",
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "install:linux": "bash scripts/install.sh"
   },
-  "keywords": [],
-  "author": "",
-  "license": "ISC",
+  "engines": {
+    "node": ">=18.0.0"
+  },
+  "keywords": ["forum", "sqlite", "express", "ejs"],
+  "author": "Ruagugu",
+  "license": "MIT",
   "dependencies": {
     "@anthropic-ai/sdk": "^0.104.1",
     "bcryptjs": "^3.0.3",
