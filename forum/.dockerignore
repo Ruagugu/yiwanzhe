@@ -1,0 +1,55 @@
+# ============================================================
+# Docker 构建忽略文件
+# ============================================================
+# 避免把不必要的文件打入镜像
+
+# 依赖
+node_modules/
+npm-debug.log*
+
+# 数据库（运行时生成）
+*.db
+*.db-shm
+*.db-wal
+*.db-journal
+*.db.bak*
+
+# 临时文件 / 日志
+*.log
+*.tmp
+*.swp
+*.bak
+
+# 上传文件（运行时生成）
+public/uploads/
+uploads/
+
+# 截图
+*.png
+*.jpg
+*.jpeg
+*.gif
+
+# 文档和开发文件
+docs/
+cj.txt
+使用说明书.md
+scripts/TROUBLESHOOTING.md
+启动论坛.bat
+
+# Git / 编辑器
+.git/
+.gitignore
+.vscode/
+.idea/
+.DS_Store
+Thumbs.db
+
+# 环境变量
+.env
+.env.local
+
+# Docker 自身
+Dockerfile
+docker-compose.yml
+.dockerignore

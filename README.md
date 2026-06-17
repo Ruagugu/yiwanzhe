@@ -33,6 +33,18 @@ bash scripts/install.sh
 node app.js    # 或用 pm2 守护: pm2 start app.js --name forum
 ```
 
+## 🐳 Docker 部署（**推荐**）
+
+```bash
+cd forum
+docker compose up -d
+# 浏览器打开 http://localhost:3000
+```
+
+**优势**：镜像内已编译 Linux 版 `better-sqlite3`，**彻底避免 `invalid ELF header` 错误**，跨平台一致。
+
+详见 [`forum/scripts/DOCKER.md`](forum/scripts/DOCKER.md)。
+
 ## 常见问题
 
 | 错误 | 原因 | 解决 |
@@ -56,10 +68,14 @@ forum/
 ├── public/css/             样式表
 ├── package.json
 ├── package-lock.json
+├── Dockerfile              Docker 镜像构建
+├── docker-compose.yml      Docker 一键启动
+├── .dockerignore
 ├── 启动论坛.bat            Windows 启动脚本
 ├── scripts/
 │   ├── install.sh          Linux 一键安装
 │   ├── start.sh            Linux 启动
+│   ├── DOCKER.md           Docker 部署指南
 │   └── TROUBLESHOOTING.md  故障排查
 └── 使用说明书.md
 ```
