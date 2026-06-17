@@ -1,0 +1,19 @@
+<%- include('../partials/header') %>
+
+<div class="breadcrumb"><a href="/wiki">百科</a> / <span><%= entry.title %></span></div>
+
+<article class="card wiki-entry" data-label="<%= entry.category || '档案' %>" style="overflow:visible;">
+  <h1 class="wiki-entry-title"><%= entry.title %></h1>
+  <div class="wiki-entry-body"><%- entry.content %></div>
+</article>
+
+<div class="wiki-nav" style="display:flex; justify-content:space-between; margin-top:20px; margin-bottom:32px;">
+  <% if (prev) { %>
+    <a href="/wiki/<%= prev.id %>" class="btn">&larr; <%= prev.title %></a>
+  <% } else { %><span></span><% } %>
+  <% if (next) { %>
+    <a href="/wiki/<%= next.id %>" class="btn"><%= next.title %> &rarr;</a>
+  <% } else { %><span></span><% } %>
+</div>
+
+<%- include('../partials/footer') %>

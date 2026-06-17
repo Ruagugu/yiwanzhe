@@ -1,0 +1,107 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title><%= typeof title !== 'undefined' ? title + ' - ' : '' %><%= settings.site_name || '论坛' %></title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Archivo+Black&family=Archivo:wght@700;800;900&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="/css/style.css" id="theme-style">
+  <link rel="stylesheet" href="/css/custom.css">
+</head>
+<body>
+  <div id="page-transition"></div>
+  <header class="header">
+    <div class="container">
+      <div class="header-inner">
+        <a href="/" class="logo" data-no-transition><%= settings.site_name || '论坛' %></a>
+        <span class="nav-clock" id="nav-clock" title="当前现实时间">--:--:--</span>
+        <nav class="nav">
+          <a href="/" class="<%= currentPath === '/' ? 'active' : '' %>">首页</a>
+          <a href="/news" class="<%= currentPath.startsWith('/news') ? 'active' : '' %>">新闻</a>
+          <a href="/wiki" class="<%= currentPath.startsWith('/wiki') ? 'active' : '' %>">百科</a>
+          <% if (user) { %>
+            <a href="/topics/new" class="<%= currentPath === '/topics/new' ? 'active' : '' %>">发帖</a>
+            <a href="/messages" class="msg-nav-link <%= currentPath.startsWith('/messages') ? 'active' : '' %>">私信<% if (unreadCount > 0) { %><span class="nav-badge"><%= unreadCount %></span><% } %></a>
+            <a href="/notifications" class="msg-nav-link <%= currentPath.startsWith('/notifications') ? 'active' : '' %>">通知<% if (notifCount > 0) { %><span class="nav-badge"><%= notifCount %></span><% } %></a>
+            <a href="/user/<%= user.username %>" data-no-transition class="<%= currentPath.startsWith('/user/' + user.username) ? 'active' : '' %>">个人</a>
+            <% if (user.role === 'admin') { %>
+              <a href="/admin" class="<%= currentPath.startsWith('/admin') ? 'active' : '' %>">管理</a>
+            <% } %>
+            <span class="nav-user">
+              <span class="username"><%= user.nickname || user.username %></span>
+              <a href="/auth/logout" class="btn btn-sm">退出</a>
+            </span>
+          <% } else { %>
+            <a href="/auth/login" class="<%= currentPath === '/auth/login' ? 'active' : '' %>">登录</a>
+            <a href="/auth/register" class="btn btn-primary btn-sm">注册</a>
+          <% } %>
+          <button id="theme-toggle" class="theme-toggle" title="日夜切换" aria-label="日夜切换">◐</button>
+        </nav>
+      </div>
+    </div>
+  </header>
+  <main class="main">
+    <div class="container">
+
+<script>
+(function(){
+  // 实时时钟
+  var clock = document.getElementById('nav-clock');
+  if (clock) {
+    var WEEKDAYS = ['日','一','二','三','四','五','六'];
+    function pad(n){ return n < 10 ? '0' + n : '' + n; }
+    function tick() {
+      var d = new Date();
+      var s = d.getFullYear() + '-' + pad(d.getMonth()+1) + '-' + pad(d.getDate()) + ' 周' + WEEKDAYS[d.getDay()] + ' ' + pad(d.getHours()) + ':' + pad(d.getMinutes()) + ':' + pad(d.getSeconds());
+      clock.textContent = s;
+    }
+    tick();
+    setInterval(tick, 1000);
+  }
+
+  var toggle = document.getElementById('theme-toggle');
+  var style = document.getElementById('theme-style');
+  var theme = localStorage.getItem('theme') || 'dark';
+  if (theme === 'light') {
+    style.href = '/css/style-light.css';
+    toggle.textContent = '◉';
+  }
+  toggle.addEventListener('click', function(){
+    pageTransition(function(){
+      if (style.href.indexOf('style-light') > -1) {
+        style.href = '/css/style.css';
+        toggle.textContent = '◐';
+        localStorage.setItem('theme', 'dark');
+      } else {
+        style.href = '/css/style-light.css';
+        toggle.textContent = '◉';
+        localStorage.setItem('theme', 'light');
+      }
+    });
+  });
+
+  var overlay = document.getElementById('page-transition');
+  function pageTransition(cb) {
+    overlay.classList.add('active');
+    setTimeout(function(){ cb(); }, 150);
+    setTimeout(function(){ overlay.classList.remove('active'); }, 450);
+  }
+
+  document.addEventListener('click', function(e){
+    var a = e.target.closest('a');
+    if (!a) return;
+    var href = a.getAttribute('href');
+    if (!href || href.startsWith('http') || href.startsWith('#') || href.startsWith('javascript')) return;
+    if (a.getAttribute('data-no-transition')) return;
+    if (a.target === '_blank') return;
+    if (a.closest('form')) return;
+    if (e.metaKey || e.ctrlKey) return;
+    e.preventDefault();
+    pageTransition(function(){
+      window.location.href = href;
+    });
+  });
+})();
+</script>

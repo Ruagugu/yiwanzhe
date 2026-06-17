@@ -1,0 +1,51 @@
+<%- include('../partials/header') %>
+
+<div class="newspaper">
+  <div class="np-masthead">
+    <div class="np-meta-line">
+      <span>第 <%= news.length %> 期</span>
+      <span class="np-meta-center">WCSC 官方公报 · 仅供超越者阅览</span>
+      <span>价格: 一个秘密</span>
+    </div>
+    <h1 class="np-title"><%= settings.site_name || '遗忘者归乡' %> 时报</h1>
+    <div class="np-subtitle">THE FORGOTTEN HERALD · 传说从未沉默</div>
+  </div>
+
+  <% if (user && user.role === 'admin') { %>
+    <div class="np-admin-bar">
+      <a href="/news/new" class="btn btn-primary">+ 发布新闻</a>
+    </div>
+  <% } %>
+
+  <% if (news.length === 0) { %>
+    <div class="np-empty">// 暂无新闻刊载</div>
+  <% } else { %>
+    <div class="np-columns">
+      <% news.forEach(function(n, i) { %>
+        <article class="np-article<%= i === 0 ? ' np-lead' : '' %>">
+          <% if (n.cover) { %>
+            <a href="/news/<%= n.id %>"><img src="<%= n.cover %>" alt="cover" class="np-cover"></a>
+          <% } %>
+          <h2 class="np-headline"><a href="/news/<%= n.id %>"><%= n.title %></a></h2>
+          <div class="np-byline">
+            <span>记者 <%= n.nickname || n.char_name || n.username %></span>
+            <span>·</span>
+            <span><%= n.created_at.split(' ')[0] %></span>
+          </div>
+          <p class="np-excerpt"><%= n.content.length > 160 ? n.content.slice(0, 160) + '…' : n.content %></p>
+          <a href="/news/<%= n.id %>" class="np-readmore">阅读全文 →</a>
+          <% if (user && user.role === 'admin') { %>
+            <div class="np-article-actions">
+              <a href="/news/<%= n.id %>/edit" class="btn btn-sm">编辑</a>
+              <form method="POST" action="/news/<%= n.id %>/delete" style="display:inline" onsubmit="return confirm('确定删除这条新闻？')">
+                <button type="submit" class="btn btn-sm btn-danger">删除</button>
+              </form>
+            </div>
+          <% } %>
+        </article>
+      <% }) %>
+    </div>
+  <% } %>
+</div>
+
+<%- include('../partials/footer') %>

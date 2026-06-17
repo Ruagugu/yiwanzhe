@@ -1,0 +1,41 @@
+<%# 楼中楼子回复递归渲染 - 自包含（引用自身处理任意嵌套深度） %>
+<%# 入参：
+    replies   Array<post> 当前层子回复（已按时间排序）
+    children  { [parentId]: Array<post> } 所有非顶层回复的 parent_id 索引
+    userById  { [userId]: { username, nickname } } 用户信息索引
+    topic     当前主题
+    user      当前登录用户
+    depth     当前递归深度（可选，默认 0）
+%>
+<% (typeof depth === 'undefined' ? 0 : depth); %>
+<% var d = (typeof depth === 'undefined') ? 0 : depth; %>
+<% replies.forEach(function(sub) { %>
+  <div class="sub-reply<%= d > 0 ? ' sub-reply-nested' : '' %>" id="post-<%= sub.id %>" data-depth="<%= d %>">
+    <a href="/user/<%= sub.username %>" data-no-transition class="sub-reply-user"><%= sub.nickname || sub.username %></a>
+    <% if (sub.parent_id && sub.parent_nickname && sub.parent_nickname !== (sub.nickname || sub.username)) { %>
+      <span class="sub-reply-arrow">回复</span>
+      <a href="#post-<%= sub.parent_id %>" data-no-transition class="sub-reply-target"><%= sub.parent_nickname %></a>
+    <% } %>
+    <span class="sub-reply-content"><%- formatContent(sub.content) %></span>
+    <span class="sub-reply-time"><%= formatTime(sub.created_at) %></span>
+    <% if (user && !topic.is_locked) { %>
+      <button class="btn btn-xs sub-reply-btn" data-post="<%= sub.id %>" data-mention="<%= sub.nickname || sub.username %>" title="回复该楼层">回复</button>
+    <% } %>
+
+    <%# 递归渲染该子回复的子回复 %>
+    <% if (children[sub.id] && children[sub.id].length > 0) { %>
+      <%- include('sub-reply-tree', { replies: children[sub.id], children: children, userById: userById, topic: topic, user: user, depth: d + 1 }) %>
+    <% } %>
+
+    <% if (user && !topic.is_locked) { %>
+      <div class="sub-reply-form" id="sub-form-<%= sub.id %>" style="display:none">
+        <form method="POST" action="/topics/<%= topic.id %>/reply">
+          <input type="hidden" name="parent_id" value="<%= sub.id %>">
+          <textarea name="content" rows="2" required placeholder="回复 <%= sub.nickname || sub.username %>..."></textarea>
+          <button type="submit" class="btn btn-sm btn-primary">发送</button>
+          <button type="button" class="btn btn-sm cancel-sub">取消</button>
+        </form>
+      </div>
+    <% } %>
+  </div>
+<% }) %>

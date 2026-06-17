@@ -1,0 +1,70 @@
+<%- include('../partials/header') %>
+
+<div class="admin-page-head">
+  <h1>NPC 记忆库</h1>
+  <div class="admin-page-actions">
+    <a href="/admin" class="btn btn-sm">&larr; 返回</a>
+    <span class="badge" style="background:var(--yellow); color:#000;">总计 <%= totalCount %> 条记忆</span>
+  </div>
+</div>
+
+<div class="card" data-label="选择用户">
+  <form method="GET" class="inline-form" style="display:flex; gap:8px; align-items:center; flex-wrap:wrap;">
+    <label>用户：</label>
+    <select name="user_id" onchange="this.form.submit()">
+      <% users.forEach(function(u) { %>
+        <option value="<%= u.id %>" <%= u.id === selectedUserId ? 'selected' : '' %>>
+          <%= u.role === 'bot' ? '[BOT] ' : '' %><%= u.nickname || u.char_name || u.username %> (@<%= u.username %>)
+        </option>
+      <% }) %>
+    </select>
+  </form>
+</div>
+
+<div class="card" data-label="添加新记忆" style="overflow:visible;">
+  <h3 style="margin-bottom:12px;">+ 新增记忆</h3>
+  <form method="POST" action="/admin/memories/add">
+    <input type="hidden" name="user_id" value="<%= selectedUserId %>">
+    <div class="form-group">
+      <label>记忆内容</label>
+      <textarea name="content" rows="3" required placeholder="例：记得 @林希 是晨曦孤儿院的现任家长，与松鼠是搭档；她非常缺钱且讨厌白干。"></textarea>
+    </div>
+    <div class="form-row" style="display:flex; gap:12px; flex-wrap:wrap;">
+      <div class="form-group" style="flex:1; min-width:160px;">
+        <label>分类</label>
+        <input type="text" name="category" placeholder="general / character / event / lore" value="character">
+      </div>
+      <div class="form-group" style="flex:1; min-width:160px;">
+        <label>来源</label>
+        <input type="text" name="source" placeholder="manual / wiki / 帖子#12">
+      </div>
+      <div class="form-group" style="flex:1; min-width:120px;">
+        <label>权重 0-1</label>
+        <input type="number" name="weight" value="0.7" min="0" max="1" step="0.1">
+      </div>
+    </div>
+    <button type="submit" class="btn btn-primary">添加</button>
+  </form>
+</div>
+
+<% if (memories.length === 0) { %>
+  <div class="card"><p class="text-muted" style="text-align:center; padding:20px;">// 该用户暂无记忆</p></div>
+<% } else { %>
+  <% memories.forEach(function(m) { %>
+    <div class="card memory-card">
+      <div class="memory-head">
+        <span class="badge">#<%= m.id %></span>
+        <span class="badge"><%= m.category %></span>
+        <span class="memory-weight">权重 <%= m.weight.toFixed(1) %></span>
+        <% if (m.source) { %><span class="text-muted" style="font-size:0.7rem;">来源: <%= m.source %></span><% } %>
+        <span class="text-muted" style="font-size:0.7rem; margin-left:auto;"><%= m.created_at %></span>
+      </div>
+      <div class="memory-content"><%= m.content %></div>
+      <form method="POST" action="/admin/memories/<%= m.id %>/delete?user_id=<%= selectedUserId %>" style="display:inline" onsubmit="return confirm('确定删除？')">
+        <button type="submit" class="btn btn-sm btn-danger">删除</button>
+      </form>
+    </div>
+  <% }) %>
+<% } %>
+
+<%- include('../partials/footer') %>

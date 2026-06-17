@@ -1,0 +1,198 @@
+<%- include('../partials/header') %>
+
+<div class="admin-page-head">
+  <h1>注册申请审核</h1>
+  <div class="admin-page-actions">
+    <a href="/admin/users" class="btn btn-sm">&larr; 返回用户列表</a>
+  </div>
+</div>
+
+<% if (u.status === 'pending') { %>
+  <div class="alert" style="border-left:6px solid var(--red); margin-bottom:20px;">
+    <strong style="color:var(--red);">● 待审核</strong> ·
+    注册于 <%= formatTime(u.created_at) %>
+  </div>
+  <div class="review-actions" style="margin-bottom:24px;">
+    <form method="POST" action="/admin/users/<%= u.id %>/approve" style="display:inline">
+      <button type="submit" class="btn btn-primary">✓ 批准注册</button>
+    </form>
+    <form method="POST" action="/admin/users/<%= u.id %>/reject" style="display:inline"
+      onsubmit="return confirm('确定拒绝并删除该注册申请？')">
+      <button type="submit" class="btn btn-danger">✕ 拒绝</button>
+    </form>
+  </div>
+<% } else { %>
+  <div class="alert" style="margin-bottom:20px;">该用户当前状态：<strong><%= u.status %></strong></div>
+<% } %>
+
+<div class="char-sheet-container review-sheet">
+  <div class="cs-banner">
+    <div class="cs-avatar-wrap">
+      <% if (u.avatar) { %>
+        <img src="<%= u.avatar %>" alt="avatar" class="cs-avatar-img">
+      <% } else { %>
+        <div class="avatar avatar-xl"><%= (u.nickname || u.username).charAt(0).toUpperCase() %></div>
+      <% } %>
+    </div>
+    <div class="cs-banner-info">
+      <h1 class="cs-name">
+        <%= u.nickname || u.char_name || u.username %>
+        <% if (u.role === 'admin') { %><span class="badge badge-admin">WCSC</span><% } %>
+        <% if (u.status === 'pending') { %><span class="badge" style="background:var(--red); color:#fff;">待审核</span><% } %>
+      </h1>
+      <div class="cs-id-row">
+        <span class="cs-id-label">用户ID</span>
+        <code class="cs-id">@<%= u.username %></code>
+        <% if (u.char_name) { %><span class="cs-id-label">角色名</span><span class="cs-char-name"><%= u.char_name %></span><% } %>
+      </div>
+      <div class="cs-subtitle">
+        <% if (u.gender) { %><span>· <%= u.gender %></span><% } %>
+        <% if (u.age > 0) { %><span>· <%= u.age %>岁</span><% } %>
+        <% if (u.location) { %><span>· <%= u.location %></span><% } %>
+        <% if (u.email) { %><span>· 邮箱: <%= u.email %></span><% } %>
+      </div>
+      <div class="cs-tags">
+        <span class="badge badge-info">能级: <%= u.energy_level || '接触者' %></span>
+        <% if (u.criterion) { %><span class="criterion-tag criterion-<%= u.criterion %>"><%= u.criterion %></span><% } %>
+        <span class="badge"><%= u.health_status || '健康' %></span>
+      </div>
+    </div>
+  </div>
+
+  <div class="cs-grid">
+    <div class="cs-left">
+      <% if (u.appearance || u.bio) { %>
+        <div class="card cs-card" data-label="角色设定">
+          <% if (u.appearance) { %>
+            <div class="cs-card-row" style="flex-direction:column; align-items:flex-start;">
+              <span class="cs-key">外貌</span>
+              <span class="cs-val" style="white-space:pre-wrap; margin-top:6px;"><%= u.appearance %></span>
+            </div>
+          <% } %>
+          <% if (u.bio) { %>
+            <div class="cs-card-row" style="flex-direction:column; align-items:flex-start; margin-top:<%= u.appearance ? 12 : 0 %>px;">
+              <span class="cs-key">简介</span>
+              <span class="cs-val" style="white-space:pre-wrap; margin-top:6px;"><%= u.bio %></span>
+            </div>
+          <% } %>
+        </div>
+      <% } %>
+
+      <div class="card cs-card" data-label="传说">
+        <div class="cs-card-row"><span class="cs-key">传说</span><span class="cs-val"><%= u.legend_name || '--' %></span></div>
+        <div class="cs-card-row">
+          <span class="cs-key">准则</span>
+          <% if (u.criterion) { %>
+            <span class="criterion-tag criterion-<%= u.criterion %>"><%= u.criterion %></span>
+          <% } else { %><span class="cs-val">--</span><% } %>
+        </div>
+        <div class="cs-card-row"><span class="cs-key">谜题</span><span class="cs-val"><%= u.puzzle || '--' %></span></div>
+        <div class="cs-card-row"><span class="cs-key">弱点</span><span class="cs-val"><%= u.weakness || '--' %></span></div>
+      </div>
+
+      <div class="card cs-card" data-label="属性 · 注册时设定">
+        <%
+          function attrTier(v) {
+            if (v >= 18) return '传颂者';
+            if (v >= 13) return '通晓者';
+            if (v >= 8) return '接触者';
+            return '普通人';
+          }
+          function attrPct(v) {
+            var base = 25;
+            var extra = ((v - 5) / 15) * 75;
+            return Math.max(25, Math.min(100, base + extra));
+          }
+        %>
+        <div class="attr-scale-legend">
+          <span class="attr-scale-tick">5·普通人</span>
+          <span class="attr-scale-tick">7·接触者</span>
+          <span class="attr-scale-tick">13·通晓者</span>
+          <span class="attr-scale-tick">20·传颂者</span>
+        </div>
+        <div class="attr-bar">
+          <span class="attr-label">肉体 <small>BODY</small><span class="attr-tier"><%= attrTier(u.body_attr) %></span></span>
+          <div class="attr-track">
+            <div class="attr-baseline" style="left:25%"></div>
+            <div class="attr-fill" style="width:<%= attrPct(u.body_attr) %>%"><%= u.body_attr %></div>
+          </div>
+        </div>
+        <div class="attr-bar">
+          <span class="attr-label">感觉 <small>SENSE</small><span class="attr-tier"><%= attrTier(u.sense_attr) %></span></span>
+          <div class="attr-track">
+            <div class="attr-baseline" style="left:25%"></div>
+            <div class="attr-fill attr-sense" style="width:<%= attrPct(u.sense_attr) %>%"><%= u.sense_attr %></div>
+          </div>
+        </div>
+        <div class="attr-bar">
+          <span class="attr-label">精神 <small>SPIRIT</small><span class="attr-tier"><%= attrTier(u.spirit_attr) %></span></span>
+          <div class="attr-track">
+            <div class="attr-baseline" style="left:25%"></div>
+            <div class="attr-fill attr-spirit" style="width:<%= attrPct(u.spirit_attr) %>%"><%= u.spirit_attr %></div>
+          </div>
+        </div>
+        <div class="attr-bar">
+          <span class="attr-label">社会 <small>SOCIAL</small><span class="attr-tier"><%= attrTier(u.social_attr) %></span></span>
+          <div class="attr-track">
+            <div class="attr-baseline" style="left:25%"></div>
+            <div class="attr-fill attr-social" style="width:<%= attrPct(u.social_attr) %>%"><%= u.social_attr %></div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="cs-right">
+      <div class="card cs-card" data-label="能力">
+        <% var hasAbility = false; %>
+        <% for (var i=1; i<=3; i++) { %>
+          <% var aname = u['ability'+i+'_name']; var aeff = u['ability'+i+'_effect']; %>
+          <% if (aname) { hasAbility = true; %>
+            <div class="ability-card">
+              <h4 class="ability-name"><%= aname %></h4>
+              <p class="ability-effect"><%= aeff || '--' %></p>
+            </div>
+          <% } %>
+        <% } %>
+        <% if (!hasAbility) { %><p class="text-muted">// 暂无能力记录</p><% } %>
+      </div>
+
+      <% if (items && items.length > 0) { %>
+        <div class="card cs-card" data-label="初始背包">
+          <div class="inventory-grid">
+            <% items.forEach(function(it) { %>
+              <div class="inv-card rarity-<%= it.rarity %>">
+                <div class="inv-head">
+                  <span class="inv-name"><%= it.item_name %></span>
+                  <span class="inv-qty">×<%= it.quantity %></span>
+                </div>
+                <div class="inv-meta">
+                  <span class="inv-type"><%= it.item_type %></span>
+                  <span class="inv-rarity"><%= it.rarity %></span>
+                </div>
+                <% if (it.description) { %><div class="inv-desc"><%= it.description %></div><% } %>
+              </div>
+            <% }) %>
+          </div>
+        </div>
+      <% } else { %>
+        <div class="card cs-card" data-label="初始背包">
+          <p class="text-muted">// 背包空空如也</p>
+        </div>
+      <% } %>
+    </div>
+  </div>
+</div>
+
+<% if (u.status === 'pending') { %>
+  <div class="review-actions" style="margin:24px 0; text-align:center; padding-top:24px; border-top:4px solid #000;">
+    <form method="POST" action="/admin/users/<%= u.id %>/approve" style="display:inline">
+      <button type="submit" class="btn btn-primary btn-lg" style="font-size:1.1rem; padding:14px 32px;">✓ 批准注册</button>
+    </form>
+    <form method="POST" action="/admin/users/<%= u.id %>/reject" style="display:inline; margin-left:12px;"
+      onsubmit="return confirm('确定拒绝并删除该注册申请？')">
+      <button type="submit" class="btn btn-danger" style="font-size:1.1rem; padding:14px 32px;">✕ 拒绝</button>
+    </form>
+  </div>
+<% } %>
+
+<%- include('../partials/footer') %>

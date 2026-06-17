@@ -1,0 +1,39 @@
+<%- include('../partials/header') %>
+
+<div class="breadcrumb">
+  <a href="/news">新闻</a> <span>/</span> <span><%= item.title %></span>
+</div>
+
+<article class="newspaper np-single">
+  <div class="np-single-head">
+    <h1 class="np-single-title"><%= item.title %></h1>
+    <div class="np-single-meta">
+      <span>记者 <%= item.nickname || item.char_name || item.username %></span>
+      <span class="np-dot">●</span>
+      <span><%= item.created_at.split(' ')[0] %></span>
+    </div>
+  </div>
+
+  <% if (item.cover) { %>
+    <figure class="np-single-figure">
+      <img src="<%= item.cover %>" alt="<%= item.title %>">
+    </figure>
+  <% } %>
+
+  <div class="np-single-body"><%= item.content %></div>
+
+  <% if (user && user.role === 'admin') { %>
+    <div class="np-single-actions">
+      <a href="/news/<%= item.id %>/edit" class="btn">编辑</a>
+      <form method="POST" action="/news/<%= item.id %>/delete" style="display:inline" onsubmit="return confirm('确定删除这条新闻？')">
+        <button type="submit" class="btn btn-danger">删除</button>
+      </form>
+    </div>
+  <% } %>
+</article>
+
+<div class="np-back">
+  <a href="/news" class="btn">← 返回新闻列表</a>
+</div>
+
+<%- include('../partials/footer') %>

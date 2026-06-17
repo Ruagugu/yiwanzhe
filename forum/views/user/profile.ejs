@@ -1,0 +1,184 @@
+<%- include('../partials/header') %>
+
+<div class="breadcrumb"><a href="/">首页</a> / <span><%= profile.username %></span></div>
+
+<% if (locals.saved) { %><div class="alert alert-success">资料已更新</div><% } %>
+
+<div class="char-sheet-container">
+  <div class="cs-banner">
+    <div class="cs-avatar-wrap">
+      <% if (profile.avatar) { %>
+        <img src="<%= profile.avatar %>" alt="avatar" class="cs-avatar-img">
+      <% } else { %>
+        <div class="avatar avatar-xl"><%= profile.username.charAt(0).toUpperCase() %></div>
+      <% } %>
+    </div>
+    <div class="cs-banner-info">
+      <h1 class="cs-name">
+        <%= profile.nickname || profile.char_name || profile.username %>
+        <% if (profile.role === 'admin') { %><span class="badge badge-admin">WCSC</span><% } %>
+      </h1>
+      <div class="cs-id-row">
+        <span class="cs-id-label">用户ID</span>
+        <code class="cs-id">@<%= profile.username %></code>
+        <% if (profile.char_name) { %><span class="cs-id-label">角色名</span><span class="cs-char-name"><%= profile.char_name %></span><% } %>
+      </div>
+      <div class="cs-subtitle">
+        <% if (profile.gender) { %><span>· <%= profile.gender %></span><% } %>
+        <% if (profile.age > 0) { %><span>· <%= profile.age %>岁</span><% } %>
+        <% if (profile.location) { %><span>· <%= profile.location %></span><% } %>
+      </div>
+      <div class="cs-tags">
+        <span class="badge badge-info">能级: <%= profile.energy_level || '接触者' %></span>
+        <% if (profile.criterion) { %><span class="criterion-tag criterion-<%= profile.criterion %>"><%= profile.criterion %></span><% } %>
+        <span class="badge"><%= profile.health_status || '健康' %></span>
+      </div>
+    </div>
+    <div class="cs-stats-mini">
+      <div class="cs-stat-mini"><span class="cs-stat-num"><%= profile.topic_count %></span>主题</div>
+      <div class="cs-stat-mini"><span class="cs-stat-num"><%= profile.post_count %></span>回复</div>
+      <a href="/user/<%= profile.username %>/followers" class="cs-stat-mini"><span class="cs-stat-num"><%= profile.follower_count %></span>粉丝</a>
+      <a href="/user/<%= profile.username %>/following" class="cs-stat-mini"><span class="cs-stat-num"><%= profile.following_count %></span>关注</a>
+    </div>
+  </div>
+
+  <div class="cs-grid">
+    <div class="cs-left">
+      <div class="card cs-card" data-label="传说">
+        <div class="cs-card-row"><span class="cs-key">传说</span><span class="cs-val"><%= profile.legend_name || '--' %></span></div>
+        <div class="cs-card-row">
+          <span class="cs-key">准则</span>
+          <% if (profile.criterion) { %>
+            <span class="criterion-tag criterion-<%= profile.criterion %>"><%= profile.criterion %></span>
+          <% } else { %><span class="cs-val">--</span><% } %>
+        </div>
+        <div class="cs-card-row"><span class="cs-key">谜题</span><span class="cs-val"><%= profile.puzzle || '--' %></span></div>
+        <div class="cs-card-row"><span class="cs-key">弱点</span><span class="cs-val"><%= profile.weakness || '--' %></span></div>
+      </div>
+
+      <div class="card cs-card" data-label="属性 · 基础5 / 自由8 / 上限20">
+        <div class="attr-scale-legend">
+          <span class="attr-scale-tick">5·普通人</span>
+          <span class="attr-scale-tick">7·接触者</span>
+          <span class="attr-scale-tick">13·通晓者</span>
+          <span class="attr-scale-tick">20·传颂者</span>
+        </div>
+        <%
+          // 比例尺：5 (基础) → 20 (传颂者). 但更直觉的算法是 (val-5) / (20-5) * 100% ，让 5 对应 0% (视觉上等于普通人基线)
+          // 但这样 val=5 时条子不可见。我们用 5/20=25% 作为基线，再加超出部分。
+          // 选用：width = (val-5)/15*100 + 25，clamp [25, 100]
+          function attrPct(v) {
+            var base = 25; // 5/20
+            var extra = ((v - 5) / 15) * 75;
+            var total = base + extra;
+            if (total < 25) total = 25;
+            if (total > 100) total = 100;
+            return total;
+          }
+          function attrTier(v) {
+            if (v >= 18) return '传颂者';
+            if (v >= 13) return '通晓者';
+            if (v >= 8) return '接触者';
+            return '普通人';
+          }
+        %>
+        <div class="attr-bar">
+          <span class="attr-label">肉体 <small>BODY</small><span class="attr-tier"><%= attrTier(profile.body_attr) %></span></span>
+          <div class="attr-track">
+            <div class="attr-baseline" style="left:25%"></div>
+            <div class="attr-fill" style="width:<%= attrPct(profile.body_attr) %>%"><%= profile.body_attr %></div>
+          </div>
+        </div>
+        <div class="attr-bar">
+          <span class="attr-label">感觉 <small>SENSE</small><span class="attr-tier"><%= attrTier(profile.sense_attr) %></span></span>
+          <div class="attr-track">
+            <div class="attr-baseline" style="left:25%"></div>
+            <div class="attr-fill attr-sense" style="width:<%= attrPct(profile.sense_attr) %>%"><%= profile.sense_attr %></div>
+          </div>
+        </div>
+        <div class="attr-bar">
+          <span class="attr-label">精神 <small>SPIRIT</small><span class="attr-tier"><%= attrTier(profile.spirit_attr) %></span></span>
+          <div class="attr-track">
+            <div class="attr-baseline" style="left:25%"></div>
+            <div class="attr-fill attr-spirit" style="width:<%= attrPct(profile.spirit_attr) %>%"><%= profile.spirit_attr %></div>
+          </div>
+        </div>
+        <div class="attr-bar">
+          <span class="attr-label">社会 <small>SOCIAL</small><span class="attr-tier"><%= attrTier(profile.social_attr) %></span></span>
+          <div class="attr-track">
+            <div class="attr-baseline" style="left:25%"></div>
+            <div class="attr-fill attr-social" style="width:<%= attrPct(profile.social_attr) %>%"><%= profile.social_attr %></div>
+          </div>
+        </div>
+      </div>
+
+      <div class="card cs-card" data-label="状态">
+        <div class="cs-card-row"><span class="cs-key">传颂度</span><span class="cs-val"><%= profile.renown %>%</span></div>
+        <div class="cs-card-row"><span class="cs-key">侵蚀度</span><span class="cs-val <%= profile.erosion > 30 ? 'text-danger' : '' %>"><%= profile.erosion %>%</span></div>
+        <div class="cs-card-row"><span class="cs-key">谜题探索度</span><span class="cs-val"><%= profile.puzzle_depth %>%</span></div>
+      </div>
+    </div>
+
+    <div class="cs-right">
+      <% if (profile.appearance) { %>
+      <div class="card cs-card" data-label="外貌"><p><%= profile.appearance %></p></div>
+      <% } %>
+
+      <% if (profile.background) { %>
+      <div class="card cs-card" data-label="背景"><p style="white-space:pre-wrap;"><%= profile.background %></p></div>
+      <% } %>
+
+      <% if (profile.bio) { %>
+      <div class="card cs-card" data-label="简介"><p><%= profile.bio %></p></div>
+      <% } %>
+
+      <div class="card cs-card" data-label="能力">
+        <% var hasAbility = false; %>
+        <% for (var i=1; i<=3; i++) { %>
+          <% var aname = profile['ability'+i+'_name']; var aeff = profile['ability'+i+'_effect']; %>
+          <% if (aname) { hasAbility = true; %>
+            <div class="ability-card">
+              <h4 class="ability-name"><%= aname %></h4>
+              <p class="ability-effect"><%= aeff || '--' %></p>
+            </div>
+          <% } %>
+        <% } %>
+        <% if (!hasAbility) { %><p class="text-muted">// 暂无能力记录</p><% } %>
+      </div>
+
+      <div class="card cs-card" data-label="近期发帖">
+        <% if (recentTopics.length > 0) { %>
+          <% recentTopics.forEach(function(t) { %>
+            <a href="/topics/<%= t.id %>" class="topic-item">
+              <div class="topic-info">
+                <span class="badge badge-info"><%= t.category_name %></span>
+                <span class="topic-title"><%= t.title %></span>
+              </div>
+              <div class="topic-meta"><span><%= t.reply_count %> 回复</span></div>
+            </a>
+          <% }) %>
+        <% } else { %><p class="text-muted">// 暂无发帖</p><% } %>
+      </div>
+    </div>
+  </div>
+
+  <div class="cs-actions">
+    <% if (user && (user.username === profile.username || user.role === 'admin')) { %>
+      <a href="/user/<%= profile.username %>/edit" class="btn btn-primary">编辑角色卡</a>
+    <% } %>
+    <% if (user && user.username !== profile.username) { %>
+      <a href="/messages/<%= profile.username %>" class="btn">发私信</a>
+      <% if (isFollowing) { %>
+        <form method="POST" action="/user/<%= profile.username %>/unfollow" style="display:inline;">
+          <button type="submit" class="btn">已关注 ✓</button>
+        </form>
+      <% } else { %>
+        <form method="POST" action="/user/<%= profile.username %>/follow" style="display:inline;">
+          <button type="submit" class="btn btn-primary">+ 关注</button>
+        </form>
+      <% } %>
+    <% } %>
+  </div>
+</div>
+
+<%- include('../partials/footer') %>

@@ -1,0 +1,322 @@
+<%- include('../partials/header') %>
+
+<div class="admin-page-head">
+  <h1>Bot 管理</h1>
+  <div class="admin-page-actions">
+    <a href="/admin" class="btn btn-sm">&larr; 返回</a>
+    <% if (activeTab !== 'create') { %>
+      <a href="/admin/bots?tab=create" class="btn btn-sm btn-primary">+ 新建 Bot</a>
+    <% } %>
+    <% if (activeTab !== 'list' && bots.length > 0) { %>
+      <a href="/admin/bots?tab=list" class="btn btn-sm">查看列表</a>
+    <% } %>
+  </div>
+</div>
+
+<% if (error) { %><div class="alert alert-error"><%= error %></div><% } %>
+
+<!-- Tab content: create -->
+<% if (activeTab === 'create') { %>
+  <div class="card" data-label="NEW BOT" style="overflow:visible;">
+    <form method="POST" action="/admin/bots/new">
+      <h3 style="margin-bottom:16px;">创建新 Bot</h3>
+
+      <div class="form-group">
+        <label>显示名称 <small>（后台管理用）</small></label>
+        <input type="text" name="display_name" placeholder="如：愚者的信使" required>
+      </div>
+
+      <div class="form-group">
+        <label>角色名 char_name <small>（论坛内显示的角色名）</small></label>
+        <input type="text" name="char_name" placeholder="如：信使·菲尼克斯">
+      </div>
+
+      <div class="form-group">
+        <label>角色设定 system_prompt</label>
+        <textarea name="system_prompt" rows="6" placeholder="用中文描述 Bot 的性格、身份、行为准则、说话风格……" required></textarea>
+      </div>
+
+      <div class="form-group">
+        <label>传说名 legend_name</label>
+        <input type="text" name="legend_name" placeholder="如：愚者的信使">
+      </div>
+
+      <div class="form-group">
+        <label>准则 criterion</label>
+        <select name="criterion">
+          <option value="">（未选）</option>
+          <option value="灯">灯</option><option value="杯">杯</option><option value="心">心</option>
+          <option value="冬">冬</option><option value="刃">刃</option><option value="启">启</option>
+          <option value="铸">铸</option><option value="蛾">蛾</option><option value="蜜">蜜</option>
+          <option value="月">月</option><option value="鳞">鳞</option><option value="穹">穹</option>
+        </select>
+      </div>
+
+      <div class="form-group">
+        <label>外貌描述 appearance</label>
+        <input type="text" name="appearance" placeholder="如：身着旧大衣，帽檐遮住半张脸">
+      </div>
+
+      <div class="form-group">
+        <label>简介 bio</label>
+        <input type="text" name="bio" placeholder="简短个人简介">
+      </div>
+
+      <div class="form-group">
+        <label>头像链接 avatar</label>
+        <input type="text" name="avatar" placeholder="https://... 或留空">
+      </div>
+
+      <hr style="border:2px solid #000; margin:16px 0;">
+
+      <div class="form-group">
+        <label>模型 model</label>
+        <div style="display:flex; gap:8px;">
+          <select name="model" id="new-model-select" class="bot-new-model" style="flex:1;">
+            <option value="claude-sonnet-4-6">claude-sonnet-4-6</option>
+            <option value="claude-opus-4-8">claude-opus-4-8</option>
+            <option value="claude-haiku-4-5-20251001">claude-haiku-4-5</option>
+          </select>
+          <button type="button" class="btn btn-sm" onclick="fetchModels('new')">拉取模型</button>
+        </div>
+        <small style="color:var(--text-dim);">先填 API Key 和 API 代理地址，再点拉取</small>
+      </div>
+
+      <div class="form-group">
+        <label>API Key</label>
+        <input type="password" name="api_key" id="new-api-key" class="bot-new-apikey" placeholder="sk-... 或留空使用环境变量 ANTHROPIC_API_KEY">
+      </div>
+
+      <div class="form-group">
+        <label>API 代理地址 <small>（留空直连官方）</small></label>
+        <input type="text" name="api_base" id="new-api-base" class="bot-new-apibase" placeholder="如：https://api.deepseek.com 或 https://your-proxy.com/v1">
+      </div>
+
+      <div class="form-group">
+        <label>活动间隔（秒） <small>默认 900 = 15分钟</small></label>
+        <input type="number" name="activity_interval" value="900" min="60" max="86400">
+      </div>
+
+      <button type="submit" class="btn btn-primary">创建 Bot</button>
+      <a href="/admin/bots" class="btn">取消</a>
+    </form>
+  </div>
+
+<!-- Tab content: list -->
+<% } else { %>
+  <% if (bots.length === 0) { %>
+    <div class="card" data-label="NO BOTS">
+      <p class="text-muted" style="text-align:center; padding:24px;">// 暂无 Bot</p>
+      <div style="text-align:center; margin-top:12px;">
+        <a href="/admin/bots?tab=create" class="btn btn-primary">+ 新建第一个 Bot</a>
+      </div>
+    </div>
+  <% } else { %>
+    <div id="batch-form">
+      <div class="bot-batch-bar">
+        <label class="batch-check">
+          <input type="checkbox" id="select-all"> 全选
+        </label>
+        <button type="button" data-batch-action="enable" class="btn btn-sm">批量启用</button>
+        <button type="button" data-batch-action="disable" class="btn btn-sm">批量停用</button>
+        <button type="button" data-batch-action="delete" class="btn btn-sm btn-danger">批量删除</button>
+        <span class="batch-count" id="batch-count">已选 0</span>
+      </div>
+
+      <% bots.forEach(function(b) { %>
+        <div class="card" style="margin-top:16px; overflow:visible;" data-label="<%= b.display_name %>">
+          <div class="bot-row">
+            <label class="batch-check bot-row-check">
+              <input type="checkbox" value="<%= b.id %>" class="bot-check">
+            </label>
+            <div class="bot-row-info">
+              <div>
+                <strong style="font-size:1.1rem;">@<%= b.username %></strong>
+                <% if (b.char_name) { %><span style="color:var(--yellow);"> 饰 <%= b.char_name %></span><% } %>
+                <span class="badge <%= b.is_active ? 'badge-admin' : '' %>" style="margin-left:8px;"><%= b.is_active ? '运行中' : '已停用' %></span>
+              </div>
+              <div class="text-muted" style="margin-top:4px; font-size:0.75rem;">
+                模型: <%= b.model %> · 间隔: <%= Math.round(b.activity_interval / 60) %>min
+                · 今日动作: <%= b.actions_today %>
+                <% if (b.last_action) { %>· 上次: <%= b.last_action %><% } %>
+              </div>
+            </div>
+            <div class="bot-row-actions">
+              <a href="/admin/bots/<%= b.id %>/preview" class="btn btn-sm" title="查看将发送给 LLM 的完整内容 + token 估算">提示词</a>
+              <form method="POST" action="/admin/bots/<%= b.id %>/toggle" style="display:inline;">
+                <button type="submit" class="btn btn-sm"><%= b.is_active ? '停用' : '启用' %></button>
+              </form>
+              <form method="POST" action="/admin/bots/<%= b.id %>/trigger" style="display:inline;" onsubmit="this.querySelector('button').textContent='执行中...';">
+                <button type="submit" class="btn btn-sm btn-primary">&#9654; 触发</button>
+              </form>
+              <form method="POST" action="/admin/bots/<%= b.id %>/delete" style="display:inline;" onsubmit="return confirm('确定删除 Bot @<%= b.username %>？不可恢复！')">
+                <button type="submit" class="btn btn-sm btn-danger">删除</button>
+              </form>
+            </div>
+          </div>
+
+          <details style="margin-top:14px;">
+            <summary style="cursor:pointer; font-weight:800; text-transform:uppercase; font-size:0.75rem; color:var(--yellow);">编辑配置</summary>
+            <form method="POST" action="/admin/bots/<%= b.id %>/edit" style="margin-top:12px;">
+              <div class="form-group">
+                <label>显示名称</label>
+                <input type="text" name="display_name" value="<%= b.display_name %>">
+              </div>
+              <div class="form-group">
+                <label>角色名</label>
+                <input type="text" name="char_name" value="<%= b.char_name %>">
+              </div>
+              <div class="form-group">
+                <label>系统提示词</label>
+                <textarea name="system_prompt" rows="4"><%= b.system_prompt %></textarea>
+              </div>
+              <div class="form-group">
+                <label>传说名</label>
+                <input type="text" name="legend_name" value="<%= b.legend_name || '' %>">
+              </div>
+              <div class="form-group">
+                <label>准则</label>
+                <select name="criterion">
+                  <option value="">（未选）</option>
+                  <% ['灯','杯','心','冬','刃','启','铸','蛾','蜜','月','鳞','穹'].forEach(function(c) { %>
+                    <option value="<%= c %>" <%= b.criterion === c ? 'selected' : '' %>><%= c %></option>
+                  <% }) %>
+                </select>
+              </div>
+              <div class="form-group">
+                <label>外貌</label>
+                <input type="text" name="appearance" value="<%= b.appearance || '' %>">
+              </div>
+              <div class="form-group">
+                <label>简介</label>
+                <input type="text" name="bio" value="<%= b.bio || '' %>">
+              </div>
+              <div class="form-group">
+                <label>头像链接</label>
+                <input type="text" name="avatar" value="<%= b.avatar || '' %>">
+              </div>
+              <div class="form-group">
+                <label>模型</label>
+                <div style="display:flex; gap:8px;">
+                  <select name="model" class="bot-<%= b.id %>-model" style="flex:1;">
+                    <option value="<%= b.model %>"><%= b.model %></option>
+                  </select>
+                  <button type="button" class="btn btn-sm" onclick="fetchModels(<%= b.id %>)">拉取模型</button>
+                </div>
+              </div>
+              <div class="form-group">
+                <label>API Key <small>（留空使用环境变量）</small></label>
+                <input type="password" name="api_key" class="bot-<%= b.id %>-apikey" placeholder="（不修改则留空）" value="<%= b.api_key %>">
+              </div>
+              <div class="form-group">
+                <label>API 代理地址</label>
+                <input type="text" name="api_base" class="bot-<%= b.id %>-apibase" value="<%= b.api_base || '' %>" placeholder="留空直连官方">
+              </div>
+              <div class="form-group">
+                <label>活动间隔（秒）</label>
+                <input type="number" name="activity_interval" value="<%= b.activity_interval %>" min="60" max="86400">
+              </div>
+              <button type="submit" class="btn btn-primary">保存修改</button>
+            </form>
+          </details>
+        </div>
+      <% }) %>
+    </div>
+  <% } %>
+<% } %>
+
+<%- include('../partials/footer') %>
+
+<script>
+function fetchModels(botId) {
+  var sel = document.querySelector('.bot-' + botId + '-model');
+  var apiBase = document.querySelector('.bot-' + botId + '-apibase');
+  var apiKey = document.querySelector('.bot-' + botId + '-apikey');
+  if (!apiBase || !apiBase.value) { alert('请先填写 API 代理地址'); return; }
+
+  var btn = event.target;
+  btn.textContent = '拉取中...';
+  btn.disabled = true;
+
+  var formData = new URLSearchParams();
+  formData.append('api_base', apiBase.value);
+  if (apiKey && apiKey.value) formData.append('api_key', apiKey.value);
+
+  fetch('/admin/bots/models', { method: 'POST', headers: { 'Content-Type': 'application/x-www-form-urlencoded' }, body: formData.toString() })
+    .then(function(r) { return r.json(); })
+    .then(function(data) {
+      if (data.error) { alert(data.error); return; }
+      sel.innerHTML = '';
+      data.models.forEach(function(m) {
+        var opt = document.createElement('option');
+        opt.value = m.id;
+        opt.textContent = m.id;
+        sel.appendChild(opt);
+      });
+    })
+    .catch(function(e) { alert('拉取失败: ' + e.message); })
+    .finally(function() { btn.textContent = '拉取模型'; btn.disabled = false; });
+}
+
+// 批量选择 + 批量操作
+(function(){
+  var selectAll = document.getElementById('select-all');
+  var countEl = document.getElementById('batch-count');
+  function update() {
+    var checks = document.querySelectorAll('.bot-check');
+    var n = 0;
+    checks.forEach(function(c){ if (c.checked) n++; });
+    if (countEl) countEl.textContent = '已选 ' + n;
+    if (selectAll) {
+      selectAll.checked = n === checks.length && checks.length > 0;
+      selectAll.indeterminate = n > 0 && n < checks.length;
+    }
+  }
+  if (selectAll) {
+    selectAll.addEventListener('change', function(){
+      var checks = document.querySelectorAll('.bot-check');
+      checks.forEach(function(c){ c.checked = selectAll.checked; });
+      update();
+    });
+  }
+  document.querySelectorAll('.bot-check').forEach(function(c){
+    c.addEventListener('change', update);
+  });
+
+  // 批量操作按钮（通过 fetch 提交，避免嵌套 form 问题）
+  document.querySelectorAll('[data-batch-action]').forEach(function(btn){
+    btn.addEventListener('click', function(){
+      var action = this.getAttribute('data-batch-action');
+      var ids = [];
+      document.querySelectorAll('.bot-check:checked').forEach(function(c){ ids.push(c.value); });
+      if (ids.length === 0) { alert('请先勾选 Bot'); return; }
+      if (action === 'delete' && !confirm('确定批量删除选中的 ' + ids.length + ' 个 Bot？不可恢复！')) return;
+
+      var body = new URLSearchParams();
+      body.append('action', action);
+      ids.forEach(function(id){ body.append('bot_ids[]', id); });
+
+      this.disabled = true;
+      var origText = this.textContent;
+      this.textContent = '处理中...';
+
+      fetch('/admin/bots/batch', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+        body: body.toString()
+      }).then(function(r){
+        if (r.redirected) { window.location.href = r.url; return null; }
+        return r.text();
+      }).then(function(html){
+        if (html !== null) window.location.reload();
+      }).catch(function(e){
+        alert('操作失败: ' + e.message);
+        btn.disabled = false;
+        btn.textContent = origText;
+      });
+    });
+  });
+
+  update();
+})();
+</script>

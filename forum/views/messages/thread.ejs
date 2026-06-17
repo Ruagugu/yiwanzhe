@@ -1,0 +1,39 @@
+<%- include('../partials/header') %>
+
+<div class="breadcrumb">
+  <a href="/">首页</a> / <a href="/messages">私信</a> / <span><%= other.nickname || other.username %></span>
+</div>
+
+<div class="card msg-thread-card" data-label="对话 · <%= other.nickname || other.char_name || other.username %>">
+  <div class="msg-thread-head">
+    <a href="/user/<%= other.username %>" class="msg-thread-peer">
+      <% if (other.avatar) { %>
+        <img src="<%= other.avatar %>" alt="avatar" class="msg-avatar-img">
+      <% } else { %>
+        <div class="avatar"><%= (other.nickname || other.username).charAt(0).toUpperCase() %></div>
+      <% } %>
+      <span class="msg-conv-name"><%= other.nickname || other.username %><% if (other.role === 'admin') { %> <span class="badge badge-admin">WCSC</span><% } %></span>
+    </a>
+  </div>
+
+  <div class="msg-thread">
+    <% if (thread.length === 0) { %>
+      <p class="text-muted">// 还没有消息，发送第一条吧</p>
+    <% } %>
+    <% thread.forEach(function(m) { %>
+      <div class="msg-bubble-row <%= m.sender_id === user.id ? 'msg-mine' : 'msg-theirs' %>">
+        <div class="msg-bubble">
+          <p><%= m.content %></p>
+          <span class="msg-time"><%= m.created_at %></span>
+        </div>
+      </div>
+    <% }) %>
+  </div>
+
+  <form method="POST" action="/messages/<%= other.username %>" class="msg-send-form">
+    <textarea name="content" rows="2" placeholder="输入加密消息..." required></textarea>
+    <button type="submit" class="btn btn-primary">发送</button>
+  </form>
+</div>
+
+<%- include('../partials/footer') %>

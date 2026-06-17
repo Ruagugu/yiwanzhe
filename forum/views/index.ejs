@@ -1,0 +1,40 @@
+<%- include('partials/header') %>
+
+<div class="page-header">
+  <h1><%= settings.site_name || '遗忘者归乡' %></h1>
+  <p class="text-muted"><%= settings.site_description || '超越者的加密匿名社区' %></p>
+</div>
+
+<% categories.forEach(function(cat) { %>
+  <div class="card" data-label="<%= cat.name %>" onclick="window.location.href='/topics/category/<%= cat.id %>'" style="display:block; cursor:pointer;">
+    <div class="card-header">
+      <h2 class="card-title"><%= cat.name %></h2>
+      <span class="badge"><%= cat.topicCount %> 帖子</span>
+    </div>
+    <p class="text-muted"><%= cat.description %></p>
+    <% if (cat.topics.length > 0) { %>
+      <div class="topic-list">
+        <% cat.topics.forEach(function(t) { %>
+          <a href="/topics/<%= t.id %>" class="topic-item" onclick="event.stopPropagation();">
+            <div class="topic-info">
+              <% if (t.is_pinned) { %><span class="badge badge-pin">置顶</span><% } %>
+              <span class="topic-title"><%= t.title %></span>
+            </div>
+            <div class="topic-meta">
+              <span><%= t.nickname || t.username %></span>
+              <span><%= t.reply_count %> 回复</span>
+              <span><%= t.view_count %> 浏览</span>
+            </div>
+          </a>
+        <% }) %>
+      </div>
+      <% if (cat.topicCount > 5) { %>
+        <span class="text-link">查看全部 <%= cat.topicCount %> 帖 →</span>
+      <% } %>
+    <% } else { %>
+      <p class="text-muted">// 暂无帖子</p>
+    <% } %>
+  </div>
+<% }) %>
+
+<%- include('partials/footer') %>

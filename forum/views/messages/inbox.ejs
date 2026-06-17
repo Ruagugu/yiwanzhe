@@ -1,0 +1,35 @@
+<%- include('../partials/header') %>
+
+<div class="breadcrumb"><a href="/">首页</a> / <span>私信</span></div>
+
+<div class="page-header">
+  <h1>私信</h1>
+  <p class="text-muted">加密信道 · 仅你与对方可见</p>
+</div>
+
+<% if (conversations.length === 0) { %>
+  <div class="card" data-label="收件箱">
+    <p class="text-muted">// 暂无会话。去某人主页点「发私信」开启对话。</p>
+  </div>
+<% } else { %>
+  <% conversations.forEach(function(c) { %>
+    <a href="/messages/<%= c.username %>" class="card msg-conv<%= c.unread > 0 ? ' msg-unread' : '' %>" data-label="<%= c.nickname || c.char_name || c.username %>" style="display:block; cursor:pointer;">
+      <div class="msg-conv-row">
+        <% if (c.avatar) { %>
+          <img src="<%= c.avatar %>" alt="avatar" class="msg-avatar-img">
+        <% } else { %>
+          <div class="avatar"><%= (c.nickname || c.username).charAt(0).toUpperCase() %></div>
+        <% } %>
+        <div class="msg-conv-body">
+          <div class="msg-conv-head">
+            <span class="msg-conv-name"><%= c.nickname || c.username %><% if (c.role === 'admin') { %> <span class="badge badge-admin">WCSC</span><% } %></span>
+            <% if (c.unread > 0) { %><span class="badge badge-unread"><%= c.unread %> 未读</span><% } %>
+          </div>
+          <p class="msg-conv-preview"><%= c.last_sender === user.id ? '我: ' : '' %><%= c.last_content %></p>
+        </div>
+      </div>
+    </a>
+  <% }) %>
+<% } %>
+
+<%- include('../partials/footer') %>

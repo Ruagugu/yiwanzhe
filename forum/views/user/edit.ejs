@@ -1,0 +1,240 @@
+<%- include('../partials/header') %>
+
+<div class="breadcrumb"><a href="/">首页</a> / <a href="/user/<%= profile.username %>"><%= profile.username %></a> / <span>编辑</span></div>
+
+<h1 class="page-header">编辑角色卡</h1>
+
+<% if (locals.error) { %><div class="alert alert-error"><%= error %></div><% } %>
+
+<form method="POST" class="char-sheet">
+
+  <% if (locals.isAdmin) { %>
+  <!-- ===== ADMIN FULL EDIT ===== -->
+  <fieldset class="cs-fieldset"><legend>账户</legend>
+  <div class="form-group">
+    <label>简介</label>
+    <textarea name="bio" rows="3" placeholder="简短的个人介绍..."><%= profile.bio || '' %></textarea>
+  </div>
+  <div class="form-group">
+    <label>头像链接</label>
+    <input type="text" name="avatar" value="<%= profile.avatar || '' %>" placeholder="HTTPS://...">
+  </div>
+  </fieldset>
+
+  <fieldset class="cs-fieldset"><legend>身份</legend>
+  <div class="form-row">
+    <div class="form-group">
+      <label>姓名 <span class="label-hint">角色姓名</span></label>
+      <input type="text" name="char_name" value="<%= profile.char_name || '' %>">
+    </div>
+    <div class="form-group">
+      <label>性别</label>
+      <select name="gender">
+        <option value="">--</option>
+        <option value="男" <%= profile.gender==='男'?'selected':'' %>>男</option>
+        <option value="女" <%= profile.gender==='女'?'selected':'' %>>女</option>
+      </select>
+    </div>
+  </div>
+  <div class="form-row">
+    <div class="form-group">
+      <label>地点 <span class="label-hint">角色所处地点</span></label>
+      <input type="text" name="location" value="<%= profile.location || '' %>" placeholder="中国|上海|浦东新区">
+    </div>
+    <div class="form-group">
+      <label>年龄</label>
+      <input type="number" name="age" value="<%= profile.age || '' %>" min="0" max="999">
+    </div>
+  </div>
+  </fieldset>
+
+  <fieldset class="cs-fieldset"><legend>传说</legend>
+  <div class="form-row">
+    <div class="form-group">
+      <label>传说 <span class="label-hint">共鸣的传说</span></label>
+      <input type="text" name="legend_name" value="<%= profile.legend_name || '' %>">
+    </div>
+    <div class="form-group">
+      <label>准则</label>
+      <select name="criterion">
+        <option value="">--</option>
+        <% ['灯','杯','心','冬','刃','启','铸','蛾','蜜','月','鳞','穹'].forEach(function(c) { %>
+          <option value="<%= c %>" <%= profile.criterion===c?'selected':'' %>><%= c %></option>
+        <% }) %>
+      </select>
+    </div>
+  </div>
+  <div class="form-group">
+    <label>外貌描述</label>
+    <textarea name="appearance" rows="2"><%= profile.appearance || '' %></textarea>
+  </div>
+  <div class="form-group">
+    <label>背景 <span class="label-hint">角色背景故事</span></label>
+    <textarea name="background" rows="5"><%= profile.background || '' %></textarea>
+  </div>
+  </fieldset>
+
+  <fieldset class="cs-fieldset"><legend>属性 <span class="label-hint"><%= isAdmin ? '管理员可自由设定，无上限' : '基础5 · 下限3 · 上限8' %></span></legend>
+  <div class="attr-grid">
+    <div class="attr-item"><label>肉体 <span>BODY</span></label><input type="number" name="body_attr" value="<%= profile.body_attr || 5 %>" <%= isAdmin ? '' : 'min="3" max="8"' %>></div>
+    <div class="attr-item"><label>感觉 <span>SENSE</span></label><input type="number" name="sense_attr" value="<%= profile.sense_attr || 5 %>" <%= isAdmin ? '' : 'min="3" max="8"' %>></div>
+    <div class="attr-item"><label>精神 <span>SPIRIT</span></label><input type="number" name="spirit_attr" value="<%= profile.spirit_attr || 5 %>" <%= isAdmin ? '' : 'min="3" max="8"' %>></div>
+    <div class="attr-item"><label>社会 <span>SOCIAL</span></label><input type="number" name="social_attr" value="<%= profile.social_attr || 5 %>" <%= isAdmin ? '' : 'min="3" max="8"' %>></div>
+  </div>
+  </fieldset>
+
+  <fieldset class="cs-fieldset"><legend>谜题与弱点</legend>
+  <div class="form-group"><label>谜题 <span class="label-hint">专属谜题</span></label><input type="text" name="puzzle" value="<%= profile.puzzle || '' %>"></div>
+  <div class="form-group"><label>弱点</label><input type="text" name="weakness" value="<%= profile.weakness || '' %>"></div>
+  </fieldset>
+
+  <fieldset class="cs-fieldset"><legend>能力 <span class="label-hint">三个能力</span></legend>
+  <% for (var i=1; i<=3; i++) { %>
+  <div class="ability-block">
+    <div class="form-group"><label>能力 <%= i %> 名称</label><input type="text" name="ability<%= i %>_name" value="<%= profile['ability'+i+'_name'] || '' %>"></div>
+    <div class="form-group"><label>能力 <%= i %> 效果</label><textarea name="ability<%= i %>_effect" rows="2"><%= profile['ability'+i+'_effect'] || '' %></textarea></div>
+  </div>
+  <% } %>
+  </fieldset>
+
+  <fieldset class="cs-fieldset admin-only"><legend>管理员调整</legend>
+  <div class="form-row">
+    <div class="form-group"><label>生命状态</label><input type="text" name="health_status" value="<%= profile.health_status || '' %>"></div>
+    <div class="form-group">
+      <label>能级</label>
+      <select name="energy_level">
+        <% ['接触者','通晓者','传颂者','具名者','司辰'].forEach(function(l){ %>
+          <option value="<%= l %>" <%= profile.energy_level===l?'selected':'' %>><%= l %></option>
+        <% }) %>
+      </select>
+    </div>
+  </div>
+  <div class="form-row">
+    <div class="form-group"><label>传颂度</label><input type="number" name="renown" value="<%= profile.renown || 0 %>" min="0" max="100"></div>
+    <div class="form-group"><label>侵蚀度</label><input type="number" name="erosion" value="<%= profile.erosion || 0 %>" min="0" max="100"></div>
+  </div>
+  <div class="form-row">
+    <div class="form-group"><label>谜题探索度</label><input type="number" name="puzzle_depth" value="<%= profile.puzzle_depth || 0 %>" min="0" max="100"></div>
+    <div class="form-group">
+      <label>角色</label>
+      <select name="role">
+        <option value="user" <%= profile.role==='user'?'selected':'' %>>普通用户</option>
+        <option value="moderator" <%= profile.role==='moderator'?'selected':'' %>>版主</option>
+        <option value="admin" <%= profile.role==='admin'?'selected':'' %>>管理员</option>
+      </select>
+    </div>
+  </div>
+  </fieldset>
+
+  <% } else { %>
+  <!-- ===== USER EDIT (limited) ===== -->
+  <fieldset class="cs-fieldset"><legend>个人资料 <span class="label-hint">你只能修改这一区域，角色卡其余信息需联系管理员</span></legend>
+  <div class="form-group">
+    <label>角色名 <span class="label-hint">char_name</span></label>
+    <input type="text" name="char_name" value="<%= profile.char_name || '' %>">
+  </div>
+  <div class="form-group">
+    <label>头像链接 <span class="label-hint">avatar · 留空使用首字母占位</span></label>
+    <input type="text" name="avatar" value="<%= profile.avatar || '' %>" placeholder="https://... 或 /uploads/...">
+  </div>
+  <div class="form-group">
+    <label>外貌 <span class="label-hint">appearance</span></label>
+    <textarea name="appearance" rows="4" placeholder="如：168cm，红色短发，琥珀色大眼睛……"><%= profile.appearance || '' %></textarea>
+  </div>
+  <div class="form-group">
+    <label>简介 <span class="label-hint">bio</span></label>
+    <textarea name="bio" rows="4" placeholder="简短的个人介绍..."><%= profile.bio || '' %></textarea>
+  </div>
+  <div class="form-group">
+    <label>背景 <span class="label-hint">background · 角色背景故事</span></label>
+    <textarea name="background" rows="6" placeholder="你从哪里来？你经历了什么？为何会出现在这个论坛的世界里？"><%= profile.background || '' %></textarea>
+  </div>
+  <p class="text-muted" style="margin-top:12px; font-size:0.78rem;">// 其他信息（传说、准则、属性、能力、能级、传颂度、侵蚀度、性别、年龄、地点）需联系管理员调整</p>
+  </fieldset>
+  <% } %>
+
+  <button type="submit" class="btn btn-primary btn-block">保存</button>
+  <a href="/user/<%= profile.username %>" class="btn btn-block" data-no-transition style="margin-top:8px">取消</a>
+</form>
+
+  <!-- ===== 背包（所有用户可编辑） ===== -->
+  <fieldset class="cs-fieldset" id="inventory"><legend>背包 <span class="label-hint">跑团装备 · 传说遗物 · 日常道具</span></legend>
+    <%
+      const items = typeof locals !== 'undefined' ? locals.items : [];
+    %>
+    <% if (items && items.length > 0) { %>
+      <div class="inventory-grid">
+        <% items.forEach(function(it) { %>
+          <div class="inv-card rarity-<%= it.rarity %>" data-item-id="<%= it.id %>">
+            <div class="inv-head">
+              <span class="inv-name"><%= it.item_name %></span>
+              <span class="inv-qty">×<%= it.quantity %></span>
+            </div>
+            <div class="inv-meta">
+              <span class="inv-type"><%= it.item_type %></span>
+              <span class="inv-rarity"><%= it.rarity %></span>
+            </div>
+            <% if (it.description) { %><div class="inv-desc"><%= it.description %></div><% } %>
+            <details class="inv-edit-toggle">
+              <summary class="btn btn-sm">编辑</summary>
+              <form method="POST" action="/user/<%= profile.username %>/inventory/<%= it.id %>/edit" style="margin-top:8px;">
+                <div class="form-group"><label>名称</label><input type="text" name="item_name" value="<%= it.item_name %>" required></div>
+                <div class="form-row" style="display:flex; gap:8px;">
+                  <div class="form-group" style="flex:1"><label>类型</label>
+                    <select name="item_type">
+                      <% ITEM_TYPES.forEach(function(t) { %>
+                        <option value="<%= t %>" <%= it.item_type===t?'selected':'' %>><%= t %></option>
+                      <% }) %>
+                    </select>
+                  </div>
+                  <div class="form-group" style="flex:1"><label>数量</label><input type="number" name="quantity" value="<%= it.quantity %>" min="0"></div>
+                </div>
+                <div class="form-group"><label>稀有度</label>
+                  <select name="rarity">
+                    <% RARITIES.forEach(function(r) { %>
+                      <option value="<%= r %>" <%= it.rarity===r?'selected':'' %>><%= r %></option>
+                    <% }) %>
+                  </select>
+                </div>
+                <div class="form-group"><label>描述</label><textarea name="description" rows="2"><%= it.description || '' %></textarea></div>
+                <button type="submit" class="btn btn-sm btn-primary">保存</button>
+                <button type="submit" formaction="/user/<%= profile.username %>/inventory/<%= it.id %>/delete" formmethod="POST" class="btn btn-sm btn-danger" onclick="return confirm('删除该物品？')">删除</button>
+              </form>
+            </details>
+          </div>
+        <% }) %>
+      </div>
+    <% } else { %>
+      <p class="text-muted" style="text-align:center; padding:16px;">// 背包空空如也</p>
+    <% } %>
+
+    <details style="margin-top:14px;">
+      <summary class="btn btn-primary">+ 添加物品</summary>
+      <form method="POST" action="/user/<%= profile.username %>/inventory/add" style="margin-top:12px; padding:12px; background:var(--card-alt); border:2px solid #000;">
+        <div class="form-row" style="display:flex; gap:8px; flex-wrap:wrap;">
+          <div class="form-group" style="flex:2; min-width:200px;"><label>物品名称</label><input type="text" name="item_name" required placeholder="如：干将莫邪的残响 / 一包上好瓜子"></div>
+          <div class="form-group" style="flex:1; min-width:120px;"><label>数量</label><input type="number" name="quantity" value="1" min="1"></div>
+        </div>
+        <div class="form-row" style="display:flex; gap:8px; flex-wrap:wrap;">
+          <div class="form-group" style="flex:1; min-width:140px;"><label>类型</label>
+            <select name="item_type">
+              <% ITEM_TYPES.forEach(function(t) { %>
+                <option value="<%= t %>"><%= t %></option>
+              <% }) %>
+            </select>
+          </div>
+          <div class="form-group" style="flex:1; min-width:140px;"><label>稀有度</label>
+            <select name="rarity">
+              <% RARITIES.forEach(function(r) { %>
+                <option value="<%= r %>" <%= r==='common'?'selected':'' %>><%= r %></option>
+              <% }) %>
+            </select>
+          </div>
+        </div>
+        <div class="form-group"><label>描述</label><textarea name="description" rows="2" placeholder="效果、来源、备注……"></textarea></div>
+        <button type="submit" class="btn btn-primary">添加</button>
+      </form>
+    </details>
+  </fieldset>
+
+<%- include('../partials/footer') %>

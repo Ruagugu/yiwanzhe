@@ -1,0 +1,91 @@
+<%- include('../partials/header') %>
+
+<div class="breadcrumb">
+  <a href="/admin">管理面板</a> / <span>用户管理</span>
+</div>
+
+<h1>用户管理</h1>
+
+<%
+  const pending = users.filter(u => u.status === 'pending');
+  const active = users.filter(u => u.status !== 'pending');
+%>
+
+<% if (pending.length > 0) { %>
+  <div class="card" data-label="PENDING · 待审核" style="margin-bottom:24px;">
+    <p class="text-muted" style="margin-bottom:12px;">// <%= pending.length %> 位超越者等待审核</p>
+    <% pending.forEach(u => { %>
+      <div class="pending-user">
+        <div>
+          <strong>@<%= u.username %></strong>
+          <% if (u.nickname) { %><span style="color:var(--yellow);"> 昵称: <%= u.nickname %></span><% } %>
+          <span class="badge" style="margin-left:6px; background:var(--red); color:#fff;">待审核</span>
+          <div class="text-muted" style="font-size:0.75rem; margin-top:4px;">注册于 <%= formatTime(u.created_at) %></div>
+        </div>
+        <div style="display:flex; gap:6px; flex-wrap:wrap;">
+          <a href="/admin/users/<%= u.id %>/review" class="btn btn-sm">查看详情</a>
+          <form method="POST" action="/admin/users/<%= u.id %>/approve" style="display:inline">
+            <button type="submit" class="btn btn-sm btn-primary">✓ 批准</button>
+          </form>
+          <form method="POST" action="/admin/users/<%= u.id %>/reject" style="display:inline"
+            onsubmit="return confirm('确定拒绝并删除该注册申请？')">
+            <button type="submit" class="btn btn-sm btn-danger">✕ 拒绝</button>
+          </form>
+        </div>
+      </div>
+    <% }) %>
+  </div>
+<% } %>
+
+<div class="card" data-label="ALL USERS">
+  <table class="table">
+    <thead>
+      <tr>
+        <th>ID</th>
+        <th>用户ID</th>
+        <th>昵称</th>
+        <th>邮箱</th>
+        <th>角色</th>
+        <th>状态</th>
+        <th>注册时间</th>
+        <th>操作</th>
+      </tr>
+    </thead>
+    <tbody>
+      <% active.forEach(u => { %>
+        <tr>
+          <td><%= u.id %></td>
+          <td><code>@<%= u.username %></code></td>
+          <td><%= u.nickname || '-' %></td>
+          <td><%= u.email || '-' %></td>
+          <td>
+            <form method="POST" action="/admin/users/<%= u.id %>/role" class="inline-form">
+              <select name="role" onchange="this.form.submit()">
+                <option value="user" <%= u.role === 'user' ? 'selected' : '' %>>普通用户</option>
+                <option value="moderator" <%= u.role === 'moderator' ? 'selected' : '' %>>版主</option>
+                <option value="admin" <%= u.role === 'admin' ? 'selected' : '' %>>管理员</option>
+              </select>
+            </form>
+          </td>
+          <td>
+            <% if (u.status === 'active') { %><span style="color:var(--green);">● 活跃</span>
+            <% } else if (u.status === 'banned') { %><span style="color:var(--red);">● 封禁</span>
+            <% } else { %><span>--</span><% } %>
+          </td>
+          <td><%= formatTime(u.created_at).split(' ')[0] %></td>
+          <td>
+            <a href="/admin/users/<%= u.id %>/review" class="btn btn-sm">查看</a>
+            <% if (u.id !== user.id) { %>
+              <form method="POST" action="/admin/users/<%= u.id %>/delete" style="display:inline"
+                onsubmit="return confirm('确定删除该用户？')">
+                <button type="submit" class="btn btn-sm btn-danger">删除</button>
+              </form>
+            <% } %>
+          </td>
+        </tr>
+      <% }) %>
+    </tbody>
+  </table>
+</div>
+
+<%- include('../partials/footer') %>

@@ -1,0 +1,222 @@
+<%- include('../partials/header') %>
+
+<div class="admin-page-head">
+  <h1>世界书</h1>
+  <div class="admin-page-actions">
+    <a href="/admin" class="btn btn-sm">&larr; 返回</a>
+    <span class="badge" style="background:var(--yellow); color:#000;">总计 <%= totalCount %> 条</span>
+    <% if (typeof imported !== 'undefined' && imported) { %><span class="badge" style="background:var(--green);color:#000;">导入成功</span><% } %>
+    <% if (typeof error !== 'undefined' && error) { %><span class="badge" style="background:var(--red);color:#fff;"><%= error %></span><% } %>
+  </div>
+</div>
+
+<div class="card" data-label="作用域">
+  <div style="display:flex; gap:8px; align-items:center; flex-wrap:wrap; margin-bottom:12px;">
+    <a href="?scope=public" class="btn btn-sm <%= scope === 'public' ? 'btn-primary' : '' %>">📖 公共世界书</a>
+    <a href="?scope=bot<%= selectedUserId ? '&user_id='+selectedUserId : '' %>" class="btn btn-sm <%= scope === 'bot' ? 'btn-primary' : '' %>">🤖 个人世界书</a>
+  </div>
+  <% if (scope === 'bot') { %>
+    <form method="GET" class="inline-form" style="display:flex; gap:8px; align-items:center;">
+      <input type="hidden" name="scope" value="bot">
+      <label>Bot：</label>
+      <select name="user_id" onchange="this.form.submit()">
+        <% bots.forEach(function(b) { %>
+          <option value="<%= b.id %>" <%= b.id === selectedUserId ? 'selected' : '' %>>
+            [BOT] <%= b.nickname || b.char_name || b.username %> (@<%= b.username %>)
+          </option>
+        <% }) %>
+        <% if (bots.length === 0) { %>
+          <option value="">-- 无 Bot 账号 --</option>
+        <% } %>
+      </select>
+    </form>
+  <% } %>
+</div>
+
+<div class="card" data-label="导入 / 导出" style="overflow:visible;">
+  <div style="display:flex; gap:12px; align-items:flex-start; flex-wrap:wrap;">
+    <!-- 导出 -->
+    <div style="flex:0 0 auto;">
+      <a href="/admin/world-books/export?scope=<%= scope %><% if (scope === 'bot' && selectedUserId) { %>&user_id=<%= selectedUserId %><% } %>"
+         class="btn btn-primary" target="_blank">
+        📥 导出当前世界书
+      </a>
+      <div class="text-muted" style="font-size:0.7rem; margin-top:4px;">导出为酒馆 World Info JSON 格式</div>
+    </div>
+    <!-- 导入 -->
+    <div style="flex:1; min-width:300px;">
+      <form method="POST" action="/admin/world-books/import" enctype="multipart/form-data">
+        <input type="hidden" name="scope" value="<%= scope %>">
+        <% if (scope === 'bot') { %><input type="hidden" name="user_id" value="<%= selectedUserId %>"><% } %>
+        <label>从酒馆 World Info JSON 导入</label>
+        <div style="display:flex; gap:6px; margin-top:4px; flex-wrap:wrap;">
+          <label class="btn btn-sm" style="cursor:pointer; margin:0;">
+            📁 选择文件 <input type="file" name="file" accept=".json" onchange="this.form.submit()" style="display:none;">
+          </label>
+          <span style="font-size:0.75rem; align-self:center;">或粘贴内容：</span>
+          <textarea name="json" rows="3" placeholder="粘贴酒馆导出的 .json 内容……" style="flex:1; min-width:200px;"></textarea>
+          <button type="submit" class="btn btn-sm" style="align-self:flex-end;">导入</button>
+        </div>
+        <div class="text-muted" style="font-size:0.7rem; margin-top:2px;">
+          兼容酒馆 ST 1.18.x entries 格式。可直接选择 .json 文件，或粘贴 JSON 文本。
+        </div>
+      </form>
+    </div>
+  </div>
+</div>
+
+<div class="card" data-label="新增条目" style="overflow:visible;">
+  <h3 style="margin-bottom:12px;">+ 新增</h3>
+  <form method="POST" action="/admin/world-books/add">
+    <input type="hidden" name="scope" value="<%= scope %>">
+    <% if (scope === 'bot') { %><input type="hidden" name="user_id" value="<%= selectedUserId %>"><% } %>
+    <div class="form-row" style="display:flex; gap:12px; flex-wrap:wrap;">
+      <div class="form-group" style="flex:1; min-width:200px;">
+        <label>标题 / 标签</label>
+        <input type="text" name="title" placeholder="可留空；注入时作为段落标题">
+      </div>
+      <div class="form-group" style="flex:1; min-width:200px;">
+        <label>关键词（逗号 / 中文逗号 / 分号分隔）</label>
+        <input type="text" name="keywords" placeholder="孤儿院, 松鼠, 晨曦">
+      </div>
+      <div class="form-group" style="flex:0 0 auto;">
+        <label style="display:flex; align-items:center; gap:4px; cursor:pointer;">
+          <input type="checkbox" name="is_constant"> 常驻（蓝灯泡·始终注入）
+        </label>
+      </div>
+      <div class="form-group" style="flex:0 0 80px;">
+        <label>排序</label>
+        <input type="number" name="sort_order" value="0" min="0" style="width:70px;">
+      </div>
+    </div>
+    <div class="form-group">
+      <label>正文内容</label>
+      <textarea name="content" rows="4" required placeholder="命中或常驻后注入的正文。例：晨曦孤儿院是城东的一座老旧建筑，由林希管理。这里收容了许多因异界事件失去家人的孩子……"></textarea>
+    </div>
+    <button type="submit" class="btn btn-primary">添加</button>
+  </form>
+</div>
+
+<% if (books.length === 0) { %>
+  <div class="card"><p class="text-muted" style="text-align:center; padding:20px;">// 暂无条目</p></div>
+<% } else { %>
+
+  <!-- 批量操作栏 -->
+  <div class="card" data-label="批量操作" style="position:sticky; top:0; z-index:10; background:var(--bg);">
+    <form method="POST" action="/admin/world-books/batch" id="batch-form">
+      <input type="hidden" name="scope" value="<%= scope %>">
+      <% if (scope === 'bot') { %><input type="hidden" name="user_id" value="<%= selectedUserId %>"><% } %>
+      <div style="display:flex; gap:8px; align-items:center; flex-wrap:wrap;">
+        <label style="cursor:pointer; user-select:none;" onclick="var cbs=document.querySelectorAll('.wb-check'); var all=Array.from(cbs).every(c=>c.checked); cbs.forEach(c=>c.checked=!all);">
+          <input type="checkbox" id="select-all" onchange="document.querySelectorAll('.wb-check').forEach(c=>c.checked=this.checked)" style="margin-right:4px;">
+          全选 (<span id="selected-count">0</span>)
+        </label>
+        <button type="submit" name="action" value="enable" class="btn btn-sm">批量启用</button>
+        <button type="submit" name="action" value="disable" class="btn btn-sm">批量停用</button>
+        <button type="submit" name="action" value="delete" class="btn btn-sm btn-danger" onclick="return confirm('确定批量删除选中的条目？')">批量删除</button>
+      </div>
+    </form>
+  </div>
+
+  <% books.forEach(function(b) { %>
+    <div class="card memory-card wb-entry<%= b.enabled ? '' : ' wb-disabled' %>" id="entry-<%= b.id %>" style="<%= b.enabled ? '' : 'opacity:0.5;' %>">
+      <!-- 标题栏：始终可见，点击展开 -->
+      <div style="display:flex; gap:8px; align-items:center; cursor:pointer;"
+           onclick="var d=document.getElementById('body-<%= b.id %>'); var icon=document.getElementById('caret-<%= b.id %>'); if(d.style.display==='none'){d.style.display='block';icon.textContent='▼';}else{d.style.display='none';icon.textContent='▶';}">
+        <input type="checkbox" class="wb-check" name="id" value="<%= b.id %>" form="batch-form" onclick="event.stopPropagation();updateCount();" style="flex:0 0 auto;">
+        <span id="caret-<%= b.id %>" style="flex:0 0 auto; font-size:0.7rem; width:16px;">▶</span>
+        <span class="badge">#<%= b.id %></span>
+        <% if (b.scope === 'bot') { %><span class="badge badge-bot">个人</span><% } else { %><span class="badge" style="background:var(--cyan);color:#000;">公共</span><% } %>
+        <% if (b.is_constant) { %><span class="badge" style="background:#4488ff;color:#fff;">🔵 常驻</span><% } else { %><span class="badge" style="background:var(--green);color:#000;">🔑 关键词</span><% } %>
+        <% if (!b.enabled) { %><span class="badge" style="background:var(--red);color:#fff;">已停用</span><% } %>
+        <% if (b.title) { %><strong style="margin:0 8px;"><%= b.title %></strong><% } else { %><span class="text-muted" style="margin:0 8px;">未命名</span><% } %>
+        <span class="text-muted" style="font-size:0.65rem; margin-left:auto;"><%= b.created_at %></span>
+      </div>
+
+      <!-- 展开体：默认隐藏 -->
+      <div id="body-<%= b.id %>" style="display:none; margin-top:10px; border-top:2px solid #000; padding-top:10px;">
+        <% if (b.keywords) { %>
+          <div style="margin-bottom:8px;">
+            <% var kw = b.keywords.split(/[,，;；\n]/).filter(function(x){return x.trim()}); %>
+            <small class="text-muted">关键词：</small>
+            <% kw.forEach(function(k) { %><span class="badge" style="background:var(--purple);color:#fff; font-size:0.65rem; margin:0 2px;"><%= k.trim() %></span><% }) %>
+          </div>
+        <% } %>
+        <div class="memory-content"><%= b.content %></div>
+        <div style="display:flex; gap:6px; flex-wrap:wrap; margin-top:10px;">
+          <button class="btn btn-sm" onclick="event.stopPropagation();document.getElementById('edit-<%= b.id %>').style.display = document.getElementById('edit-<%= b.id %>').style.display === 'none' ? 'block' : 'none'">编辑</button>
+          <button class="btn btn-sm wb-toggle-btn" data-id="<%= b.id %>" data-enabled="<%= b.enabled ? 1 : 0 %>" onclick="event.stopPropagation();toggleEntry(this)" style="min-width:56px;"><%= b.enabled ? '停用' : '启用' %></button>
+          <form method="POST" action="/admin/world-books/<%= b.id %>/delete" onsubmit="return confirm('确定删除？')" style="display:inline;">
+            <input type="hidden" name="scope" value="<%= scope %>">
+            <% if (scope === 'bot') { %><input type="hidden" name="user_id" value="<%= selectedUserId %>"><% } %>
+            <button type="submit" class="btn btn-sm btn-danger" onclick="event.stopPropagation();">删除</button>
+          </form>
+        </div>
+
+        <!-- 编辑表单 -->
+        <div id="edit-<%= b.id %>" style="display:none; margin-top:12px; border-top:2px solid #000; padding-top:12px;">
+          <form method="POST" action="/admin/world-books/<%= b.id %>/edit">
+            <input type="hidden" name="scope" value="<%= scope %>">
+            <% if (scope === 'bot') { %><input type="hidden" name="user_id" value="<%= selectedUserId %>"><% } %>
+            <div class="form-row" style="display:flex; gap:8px; flex-wrap:wrap;">
+              <div class="form-group" style="flex:1; min-width:160px;">
+                <label>标题</label>
+                <input type="text" name="title" value="<%= b.title || '' %>">
+              </div>
+              <div class="form-group" style="flex:1; min-width:200px;">
+                <label>关键词</label>
+                <input type="text" name="keywords" value="<%= b.keywords || '' %>">
+              </div>
+              <div class="form-group" style="flex:0 0 auto;">
+                <label style="display:flex; align-items:center; gap:4px; cursor:pointer;">
+                  <input type="checkbox" name="is_constant" <%= b.is_constant ? 'checked' : '' %>> 常驻
+                </label>
+              </div>
+              <div class="form-group" style="flex:0 0 80px;">
+                <label>排序</label>
+                <input type="number" name="sort_order" value="<%= b.sort_order %>" min="0" style="width:70px;">
+              </div>
+            </div>
+            <div class="form-group">
+              <label>正文</label>
+              <textarea name="content" rows="3" required><%= b.content %></textarea>
+            </div>
+            <button type="submit" class="btn btn-primary btn-sm">保存修改</button>
+          </form>
+        </div>
+      </div>
+    </div>
+  <% }) %>
+
+  <script>
+  function updateCount() {
+    var n = document.querySelectorAll('.wb-check:checked').length;
+    document.getElementById('selected-count').textContent = n;
+  }
+  document.querySelectorAll('.wb-check').forEach(function(cb) {
+    cb.addEventListener('change', updateCount);
+  });
+
+  async function toggleEntry(btn) {
+    var id = btn.getAttribute('data-id');
+    var wasEnabled = btn.getAttribute('data-enabled') === '1';
+    try {
+      var resp = await fetch('/admin/world-books/' + id + '/toggle?ajax=1', { method: 'POST' });
+      var data = await resp.json();
+      if (data.ok) {
+        var enabled = data.enabled;
+        btn.setAttribute('data-enabled', enabled ? '1' : '0');
+        btn.textContent = enabled ? '停用' : '启用';
+        var card = document.getElementById('entry-' + id);
+        card.style.opacity = enabled ? '' : '0.5';
+        card.classList.toggle('wb-disabled', !enabled);
+        // 更新徽章
+        var badges = card.querySelectorAll('.badge');
+        badges.forEach(function(b) { if (b.textContent === '已停用' || b.textContent === '🔑 关键词' || b.textContent === '🔵 常驻') b.remove(); });
+      }
+    } catch(e) { alert('操作失败: ' + e.message); }
+  }
+  </script>
+<% } %>
+
+<%- include('../partials/footer') %>

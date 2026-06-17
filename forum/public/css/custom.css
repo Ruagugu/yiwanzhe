@@ -1,0 +1,47 @@
+/*
+ * 自定义样式 —— 遗忘者归乡
+ * 在此文件覆盖任何样式，后台设置中的「自定义 CSS」也会合入此文件
+ *
+ * 设计参考：
+ * - 深空暗色背景 #090a0f
+ * - 紫蓝渐变主色调 #667eea → #764ba2
+ * - 毛玻璃卡片 rgba(27, 39, 53, 0.95)
+ * - 12 准则色彩体系（灯杯心冬刃启铸蛾蜜月鳞穹）
+ */
+
+/* @提及链接 */
+.mention-link {
+  color: var(--purple, #9966ff);
+  font-weight: 700;
+  text-decoration: none;
+}
+.mention-link:hover {
+  text-decoration: underline;
+}
+
+/* BOT 徽章 */
+.badge-bot { background: var(--purple, #9966ff); color: #fff; }
+
+/* 通知列表 */
+.notification-list {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  margin-top: 16px;
+}
+.notification-item {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 12px;
+  padding: 12px 16px;
+  border: 2px solid #000;
+  background: #fff;
+}
+.notification-main {
+  flex: 1;
+  min-width: 0;
+}
+.notification-item .text-muted {
+  white-space: nowrap;
+}

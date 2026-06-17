@@ -1,0 +1,67 @@
+<%- include('../partials/header') %>
+
+<h1>管理面板</h1>
+
+<% if (saved) { %><div class="alert alert-success">已保存</div><% } %>
+
+<div class="admin-stats">
+  <div class="stat-card">
+    <div class="stat-number"><%= stats.users %></div>
+    <div class="stat-label">用户</div>
+  </div>
+  <div class="stat-card">
+    <div class="stat-number"><%= stats.topics %></div>
+    <div class="stat-label">主题</div>
+  </div>
+  <div class="stat-card">
+    <div class="stat-number"><%= stats.posts %></div>
+    <div class="stat-label">回复</div>
+  </div>
+  <div class="stat-card">
+    <div class="stat-number"><%= stats.categories %></div>
+    <div class="stat-label">分类</div>
+  </div>
+</div>
+
+<div class="admin-nav">
+  <a href="/admin/settings" class="btn">站点设置</a>
+  <a href="/admin/users" class="btn">用户管理</a>
+  <a href="/news" class="btn">新闻管理</a>
+  <a href="/admin/bots" class="btn">Bot 管理</a>
+  <a href="/admin/memories" class="btn">NPC 记忆库</a>
+  <a href="/admin/world-books" class="btn">世界书</a>
+  <a href="/admin/settings#world-prompt" class="btn">世界观提示词</a>
+</div>
+
+<div class="card">
+  <div class="card-header">
+    <h2 class="card-title">分类管理</h2>
+  </div>
+  <form method="POST" action="/admin/categories/add" class="inline-form">
+    <input type="text" name="name" placeholder="分类名称" required>
+    <input type="text" name="description" placeholder="描述（可选）">
+    <button type="submit" class="btn btn-primary">添加分类</button>
+  </form>
+
+  <div class="category-list">
+    <% categories.forEach(cat => { %>
+      <div class="category-item">
+        <form method="POST" action="/admin/categories/<%= cat.id %>/edit" class="inline-form">
+          <input type="text" name="name" value="<%= cat.name %>" required>
+          <input type="text" name="description" value="<%= cat.description %>">
+          <select name="post_role" title="发帖权限">
+            <option value="user" <%= cat.post_role !== 'admin' ? 'selected' : '' %>>所有人可发</option>
+            <option value="admin" <%= cat.post_role === 'admin' ? 'selected' : '' %>>仅管理员</option>
+          </select>
+          <button type="submit" class="btn btn-sm">保存</button>
+        </form>
+        <form method="POST" action="/admin/categories/<%= cat.id %>/delete" style="display:inline"
+          onsubmit="return confirm('确定删除此分类？（需先清空分类下的主题）')">
+          <button type="submit" class="btn btn-sm btn-danger">删除</button>
+        </form>
+      </div>
+    <% }) %>
+  </div>
+</div>
+
+<%- include('../partials/footer') %>

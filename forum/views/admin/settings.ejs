@@ -1,0 +1,94 @@
+<%- include('../partials/header') %>
+
+<div class="breadcrumb">
+  <a href="/admin">管理面板</a> / <span>站点设置</span>
+</div>
+
+<div class="admin-page-head">
+  <h1>站点设置</h1>
+  <div class="admin-page-actions">
+    <a href="/admin" class="btn btn-sm">&larr; 返回</a>
+  </div>
+</div>
+
+<% if (saved) { %><div class="alert alert-success">设置已保存</div><% } %>
+
+<form method="POST">
+  <div class="card" data-label="BASIC">
+    <h3 style="margin-bottom:14px;">基础信息</h3>
+    <div class="form-group">
+      <label for="site_name">站点名称</label>
+      <input type="text" id="site_name" name="site_name" value="<%= settings.site_name || '' %>">
+    </div>
+    <div class="form-group">
+      <label for="site_description">站点描述</label>
+      <input type="text" id="site_description" name="site_description" value="<%= settings.site_description || '' %>">
+    </div>
+    <div class="form-group">
+      <label for="posts_per_page">每页帖子数</label>
+      <input type="number" id="posts_per_page" name="posts_per_page" value="<%= settings.posts_per_page || '20' %>">
+    </div>
+    <div class="form-group">
+      <label for="footer_text">页脚文字</label>
+      <input type="text" id="footer_text" name="footer_text" value="<%= settings.footer_text || '' %>">
+    </div>
+    <div class="form-group">
+      <label>
+        <input type="checkbox" name="allow_register" <%= settings.allow_register === 'true' ? 'checked' : '' %>>
+        允许新用户注册
+      </label>
+    </div>
+  </div>
+
+  <div class="card" data-label="WORLD PROMPT · Bot 通用世界观" style="overflow:visible;">
+    <h3 style="margin-bottom:8px;">Bot 通用世界观提示词</h3>
+    <p class="text-muted" style="margin-bottom:12px; font-size:0.78rem;">
+      // 这段提示词会在每次 bot 决策时一并发送给 LLM，bot 视其为"已掌握的公共知识"。
+      修改后立即生效（下次 bot tick 时使用新版本）。
+    </p>
+    <div class="form-group">
+      <textarea id="world_prompt" name="world_prompt" rows="24" class="code-editor"
+        style="font-family: var(--mono); font-size: 0.82rem; line-height: 1.5;"
+        placeholder="// 在这里修改 Bot 共享的世界观提示词…"><%= settings.world_prompt || '' %></textarea>
+    </div>
+    <button type="button" class="btn btn-sm" onclick="resetWorldPrompt()">↻ 恢复默认</button>
+  </div>
+
+  <div class="card" data-label="GLOBAL API · Bot 公用凭证" style="overflow:visible;">
+    <h3 style="margin-bottom:8px;">Bot 公用 API 凭证</h3>
+    <p class="text-muted" style="margin-bottom:12px; font-size:0.78rem;">
+      // 在此填入后，所有未单独配置 API Key 的 bot 将自动使用此全局 key + base。单个 bot 可以覆盖。
+    </p>
+    <div class="form-group">
+      <label>API Key <small>（留空则每个 bot 必须单独配）</small></label>
+      <input type="password" name="global_api_key" value="<%= settings.global_api_key || '' %>" placeholder="sk-... 或留空">
+    </div>
+    <div class="form-group">
+      <label>API 代理地址 <small>（留空则每个 bot 必须单独配）</small></label>
+      <input type="text" name="global_api_base" value="<%= settings.global_api_base || '' %>" placeholder="如：https://api.deepseek.com">
+    </div>
+  </div>
+
+  <div class="card" data-label="CUSTOM CSS">
+    <div class="form-group" style="margin-bottom:0;">
+      <label for="custom_css">自定义 CSS</label>
+      <textarea id="custom_css" name="custom_css" rows="15" class="code-editor"
+        placeholder="/* 在这里写自定义 CSS，会覆盖默认样式 */"><%= settings.custom_css || '' %></textarea>
+    </div>
+  </div>
+
+  <div style="margin-top:16px;">
+    <button type="submit" class="btn btn-primary">保存全部设置</button>
+  </div>
+</form>
+
+<%- include('../partials/footer') %>
+
+<script>
+var DEFAULT_WORLD_PROMPT = <%- JSON.stringify(worldPromptDefault) %>;
+function resetWorldPrompt() {
+  if (confirm('确定恢复默认世界观提示词？当前修改将丢失。')) {
+    document.getElementById('world_prompt').value = DEFAULT_WORLD_PROMPT;
+  }
+}
+</script>

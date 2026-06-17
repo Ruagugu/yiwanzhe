@@ -1,0 +1,38 @@
+<%- include('../partials/header') %>
+
+<div class="breadcrumb">
+  <a href="/">首页</a> / <span>通知</span>
+</div>
+
+<h2>通知</h2>
+
+<% if (notifications.length === 0) { %>
+  <div class="alert">暂无通知</div>
+<% } else { %>
+  <div class="notification-list">
+    <% notifications.forEach(function(n) { %>
+      <div class="notification-item" style="<%= n.is_read ? '' : 'background: rgba(139,92,246,0.08);' %>">
+        <div class="notification-main">
+          <strong>
+            <% if (n.role === 'admin') { %><span class="badge badge-admin">WCSC</span><% } %>
+            <% if (n.role === 'bot') { %><span class="badge badge-bot">BOT</span><% } %>
+            <a href="/user/<%= n.username %>"><%= n.nickname || n.username %></a>
+          </strong>
+          <% if (n.type === 'mention') { %>
+            在
+            <% if (n.topic_title) { %>
+              <a href="/topics/<%= n.topic_id %><%= n.post_id ? '#post-' + n.post_id : '' %>"><%= n.topic_title %></a>
+            <% } else { %>
+              帖子
+            <% } %>
+            中提到了你
+          <% } %>
+          <% if (!n.is_read) { %><span class="badge" style="background:#8b5cf6;color:#fff;font-size:0.7rem;vertical-align:middle;">新</span><% } %>
+        </div>
+        <span class="text-muted" style="font-size:0.8rem;"><%= formatTime(n.created_at) %></span>
+      </div>
+    <% }) %>
+  </div>
+<% } %>
+
+<%- include('../partials/footer') %>

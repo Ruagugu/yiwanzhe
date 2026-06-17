@@ -1,0 +1,249 @@
+<%- include('../partials/header') %>
+
+<div class="auth-form char-sheet">
+  <h1>觉醒</h1>
+
+  <!-- 氛围引导 -->
+  <div class="awakening-lore">
+    <p>世界在你眼中呈现出矛盾的姿态。</p>
+    <p>一种名为<strong>【妄想症候】</strong>的感觉在你心中低语，</p>
+    <p>那是一种...忘记了某些关于自己本质的感觉。</p>
+    <p>起初只是微不足道的异样：</p>
+    <p>早上醒来，你会盯着天花板发呆三秒钟，觉得忘了什么事。</p>
+    <p>走在路上，你会突然停下脚步，回头望向空无一人的巷口。</p>
+    <p>深夜难眠时，你听见自己的心跳声里藏着另一种节奏。</p>
+    <p>那是一种挥之不去的、持续存在的感觉——</p>
+    <p>你忘记了某些关于自己本质的东西。</p>
+    <p>不是钥匙，不是手机，不是今天的作业和工作。</p>
+    <p>是更深的东西。是关于<strong>「你是谁」</strong>的答案。</p>
+    <p>你必须去寻找答案。在名为<strong>【传说】</strong>的力量引导下，</p>
+    <p>成为<strong>【超越者】</strong>。</p>
+    <p>一个被传说选中的人。</p>
+    <p>一个背负着谜题行走于现世的人。</p>
+    <p>一个必须在力量与代价之间寻找平衡的人。</p>
+    <p>&nbsp;</p>
+    <p>欢迎来到这个世界的另一面。</p>
+    <p>在这里，神话从未远去。</p>
+    <p>在这里，故事仍在被传颂。</p>
+    <p>在这里，你遗忘的那个「自己」，正在等待被找回。</p>
+    <p><strong>你准备好了吗？</strong></p>
+  </div>
+
+  <div class="awakening-divider">◆</div>
+
+  <!-- 题外话 -->
+  <div class="awakening-note">
+    <p><strong>【题外话】</strong></p>
+    <p>本论坛为角色扮演论坛。</p>
+    <p>所有发言、发帖都以<strong>【角色】</strong>出发。</p>
+    <p>论坛信息全是虚构，作为角色扮演和文学创作的加工。</p>
+    <p>禁止出现涉及现实生活的任何内容，包括但不限于现实生活的日程安排、学习计划、工作等。</p>
+    <p>禁止发送敏感、R18的色情内容。</p>
+    <p>感谢配合。</p>
+  </div>
+
+  <div class="awakening-divider">◆</div>
+
+  <p class="text-muted" style="text-align:center;margin-bottom:24px">创建你的超越者身份</p>
+
+  <% if (locals.error) { %><div class="alert alert-error"><%= error %></div><% } %>
+
+  <form method="POST">
+    <!-- ===== ACCOUNT ===== -->
+    <fieldset class="cs-fieldset"><legend>账户</legend>
+    <div class="form-row">
+      <div class="form-group">
+        <label>用户 ID <span class="label-hint">登录账号，英文数字</span></label>
+        <input type="text" name="username" value="<%= values.username || '' %>" required placeholder="如: night_rain">
+      </div>
+      <div class="form-group">
+        <label>昵称 <span class="label-hint">论坛内显示的名称</span></label>
+        <input type="text" name="nickname" value="<%= values.nickname || '' %>" required placeholder="如: 夜雨声烦">
+      </div>
+    </div>
+    <div class="form-row">
+      <div class="form-group">
+        <label>密码（至少6位）</label>
+        <input type="password" name="password" required placeholder="••••••">
+      </div>
+      <div class="form-group">
+        <label>确认密码</label>
+        <input type="password" name="password2" required placeholder="••••••">
+      </div>
+    </div>
+    </fieldset>
+
+    <!-- ===== IDENTITY ===== -->
+    <fieldset class="cs-fieldset"><legend>身份</legend>
+    <div class="form-row">
+      <div class="form-group">
+        <label>姓名 <span class="label-hint">角色姓名</span></label>
+        <input type="text" name="char_name" value="<%= values.char_name || '' %>" placeholder="林远舟">
+      </div>
+      <div class="form-group">
+        <label>性别</label>
+        <select name="gender">
+          <option value="">--</option>
+          <option value="男" <%= values.gender==='男'?'selected':'' %>>男</option>
+          <option value="女" <%= values.gender==='女'?'selected':'' %>>女</option>
+        </select>
+      </div>
+    </div>
+    <div class="form-row">
+      <div class="form-group location-group">
+        <label>地点 <span class="label-hint">按国家·省·市选择</span></label>
+        <div class="location-selects">
+          <select name="country_code" id="reg-country" required>
+            <option value="">— 国家 —</option>
+            <% COUNTRIES.forEach(function(c) { %>
+              <option value="<%= c.code %>" <%= values.country_code===c.code?'selected':'' %>><%= c.name %></option>
+            <% }) %>
+          </select>
+          <select name="province_code" id="reg-province" required>
+            <option value="">— 省/州 —</option>
+          </select>
+          <select name="city" id="reg-city" required>
+            <option value="">— 市/区 —</option>
+          </select>
+        </div>
+      </div>
+      <div class="form-group">
+        <label>年龄</label>
+        <input type="number" name="age" value="<%= values.age || '' %>" placeholder="21" min="0" max="999">
+      </div>
+    </div>
+    </fieldset>
+
+    <!-- ===== LEGEND ===== -->
+    <fieldset class="cs-fieldset"><legend>传说</legend>
+    <div class="form-row">
+      <div class="form-group">
+        <label>传说 <span class="label-hint">共鸣的传说</span></label>
+        <input type="text" name="legend_name" value="<%= values.legend_name || '' %>" placeholder="愚公移山 / 后羿射日 / 白蛇传...">
+      </div>
+      <div class="form-group">
+        <label>准则</label>
+        <select name="criterion">
+          <option value="">-- 选择 --</option>
+          <% criteria.forEach(function(c) { %>
+            <option value="<%= c %>" <%= values.criterion===c?'selected':'' %>><%= c %></option>
+          <% }) %>
+        </select>
+      </div>
+    </div>
+    <div class="form-group">
+      <label>外貌描述</label>
+      <textarea name="appearance" rows="2" placeholder="中等身材，肩膀宽但不壮，常年穿洗到发白的藏蓝色卫衣..."><%= values.appearance || '' %></textarea>
+    </div>
+    <div class="form-group">
+      <label>背景 <span class="label-hint">角色背景故事</span></label>
+      <textarea name="background" rows="4" placeholder="你从哪里来？你经历了什么？为何会出现在这个论坛的世界里？"><%= values.background || '' %></textarea>
+    </div>
+    </fieldset>
+
+    <!-- ===== ATTRIBUTES ===== -->
+    <fieldset class="cs-fieldset"><legend>属性 <span class="label-hint">基础5 · 下限3 · 上限8 · 自由点数8</span></legend>
+    <div class="attr-grid">
+      <div class="attr-item">
+        <label>肉体 <span>BODY</span></label>
+        <input type="number" name="body_attr" value="<%= values.body_attr || '5' %>" min="3" max="8">
+      </div>
+      <div class="attr-item">
+        <label>感觉 <span>SENSE</span></label>
+        <input type="number" name="sense_attr" value="<%= values.sense_attr || '5' %>" min="3" max="8">
+      </div>
+      <div class="attr-item">
+        <label>精神 <span>SPIRIT</span></label>
+        <input type="number" name="spirit_attr" value="<%= values.spirit_attr || '5' %>" min="3" max="8">
+      </div>
+      <div class="attr-item">
+        <label>社会 <span>SOCIAL</span></label>
+        <input type="number" name="social_attr" value="<%= values.social_attr || '5' %>" min="3" max="8">
+      </div>
+    </div>
+    </fieldset>
+
+    <!-- ===== PUZZLE & WEAKNESS ===== -->
+    <fieldset class="cs-fieldset"><legend>谜题与弱点</legend>
+    <div class="form-group">
+      <label>谜题 <span class="label-hint">专属谜题</span></label>
+      <input type="text" name="puzzle" value="<%= values.puzzle || '' %>" placeholder="什么样的山是不该被移走的？">
+    </div>
+    <div class="form-group">
+      <label>弱点</label>
+      <input type="text" name="weakness" value="<%= values.weakness || '' %>" placeholder="能力触发依赖强烈的情绪波动...">
+    </div>
+    </fieldset>
+
+    <!-- ===== ABILITIES ===== -->
+    <fieldset class="cs-fieldset"><legend>能力 <span class="label-hint">三个能力</span></legend>
+    <% for (var i=1; i<=3; i++) { %>
+    <div class="ability-block">
+      <div class="form-group">
+        <label>能力 <%= i %> 名称</label>
+        <input type="text" name="ability<%= i %>_name" value="<%= values['ability'+i+'_name'] || '' %>" placeholder="不移之力">
+      </div>
+      <div class="form-group">
+        <label>能力 <%= i %> 效果</label>
+        <textarea name="ability<%= i %>_effect" rows="2" placeholder="身体在接触地面时获得远超常人的抗推移能力..."><%= values['ability'+i+'_effect'] || '' %></textarea>
+      </div>
+    </div>
+    <% } %>
+    </fieldset>
+
+    <button type="submit" class="btn btn-primary btn-block" style="margin-top:8px">觉醒</button>
+  </form>
+
+  <p class="auth-link">已是超越者？<a href="/auth/login">登录</a></p>
+</div>
+
+<%- include('../partials/footer') %>
+
+<script>
+var COUNTRIES = <%- JSON.stringify(COUNTRIES) %>;
+var savedCountry = '<%= values.country_code || '' %>';
+var savedProvince = '<%= values.province_code || '' %>';
+var savedCity = '<%= values.city || '' %>';
+
+(function(){
+  var cSel = document.getElementById('reg-country');
+  var pSel = document.getElementById('reg-province');
+  var citySel = document.getElementById('reg-city');
+
+  function fillProvinces(countryCode) {
+    pSel.innerHTML = '<option value="">— 省/州 —</option>';
+    citySel.innerHTML = '<option value="">— 市/区 —</option>';
+    var c = COUNTRIES.find(function(x){ return x.code === countryCode; });
+    if (!c) return;
+    c.provinces.forEach(function(p){
+      var opt = document.createElement('option');
+      opt.value = p.code;
+      opt.textContent = p.name;
+      if (p.code === savedProvince) opt.selected = true;
+      pSel.appendChild(opt);
+    });
+    if (savedProvince) fillCities(countryCode, savedProvince);
+  }
+
+  function fillCities(countryCode, provinceCode) {
+    citySel.innerHTML = '<option value="">— 市/区 —</option>';
+    var c = COUNTRIES.find(function(x){ return x.code === countryCode; });
+    if (!c) return;
+    var p = c.provinces.find(function(x){ return x.code === provinceCode; });
+    if (!p) return;
+    p.cities.forEach(function(city){
+      var opt = document.createElement('option');
+      opt.value = city;
+      opt.textContent = city;
+      if (city === savedCity) opt.selected = true;
+      citySel.appendChild(opt);
+    });
+  }
+
+  cSel.addEventListener('change', function(){ fillProvinces(this.value); });
+  pSel.addEventListener('change', function(){ fillCities(cSel.value, this.value); });
+
+  // 恢复回填
+  if (savedCountry) fillProvinces(savedCountry);
+})();
+</script>

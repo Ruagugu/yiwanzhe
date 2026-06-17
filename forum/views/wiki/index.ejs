@@ -1,0 +1,23 @@
+<%- include('../partials/header') %>
+
+<div class="breadcrumb"><a href="/">首页</a> / <span>百科</span></div>
+
+<h1 class="page-header">世界认知稳定理事会 · 公共档案库</h1>
+<p class="text-muted" style="margin-bottom:24px;">// 非机密级资料，仅供超越者参考</p>
+
+<% Object.keys(groups).sort().forEach(function(cat) { %>
+  <div style="margin-bottom:32px;">
+    <h2 class="wiki-cat-title"><%= cat %></h2>
+    <div class="wiki-grid">
+      <% groups[cat].forEach(function(e) { %>
+        <a href="/wiki/<%= e.id %>" class="card wiki-card" data-label="<%= e.title %>">
+          <p style="font-family:var(--mono); font-size:0.7rem; color:var(--text-dim); text-transform:uppercase; margin-top:4px;">
+            <%= e.content.replace(/<[^>]*>/g, '').slice(0, 80) %>…
+          </p>
+        </a>
+      <% }) %>
+    </div>
+  </div>
+<% }) %>
+
+<%- include('../partials/footer') %>

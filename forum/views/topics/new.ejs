@@ -1,0 +1,32 @@
+<%- include('../partials/header') %>
+
+<div class="breadcrumb">
+  <a href="/">首页</a> / <span>发表新帖</span>
+</div>
+
+<h1 class="page-header">发表新帖</h1>
+
+<% if (locals.error) { %><div class="alert alert-error"><%= error %></div><% } %>
+
+<form method="POST" class="topic-form">
+  <div class="form-group">
+    <label for="category_id">分类</label>
+    <select id="category_id" name="category_id" required>
+      <option value="">选择分类</option>
+      <% categories.forEach(function(c) { %>
+        <option value="<%= c.id %>" <%= categoryId == c.id ? 'selected' : '' %>><%= c.name %></option>
+      <% }) %>
+    </select>
+  </div>
+  <div class="form-group">
+    <label for="title">标题</label>
+    <input type="text" id="title" name="title" required maxlength="200">
+  </div>
+  <div class="form-group">
+    <label for="content">内容</label>
+    <textarea id="content" name="content" rows="10" required></textarea>
+  </div>
+  <button type="submit" class="btn btn-primary">发表</button>
+</form>
+
+<%- include('../partials/footer') %>

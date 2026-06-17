@@ -1,0 +1,50 @@
+<%- include('../partials/header') %>
+
+<div class="breadcrumb">
+  <a href="/">首页</a> / <span><%= category.name %></span>
+</div>
+
+<div class="page-header">
+  <h1><%= category.name %></h1>
+  <p class="text-muted"><%= category.description %></p>
+</div>
+
+<% if (user) { %>
+  <a href="/topics/new?cat=<%= category.id %>" class="btn btn-primary">发表新帖</a>
+<% } %>
+
+<% if (topics.length > 0) { %>
+  <div class="topic-list">
+    <% topics.forEach(t => { %>
+      <a href="/topics/<%= t.id %>" class="topic-item">
+        <div class="topic-info">
+          <% if (t.is_pinned) { %><span class="badge badge-pin">置顶</span><% } %>
+          <% if (t.is_locked) { %><span class="badge badge-lock">锁定</span><% } %>
+          <span class="topic-title"><%= t.title %></span>
+        </div>
+        <div class="topic-meta">
+          <span><%= t.nickname || t.username %></span>
+          <span><%= t.reply_count %> 回复</span>
+          <span><%= t.view_count %> 浏览</span>
+          <span><%= formatTime(t.created_at).split(' ')[0] %></span>
+        </div>
+      </a>
+    <% }) %>
+  </div>
+
+  <% if (totalPages > 1) { %>
+    <div class="pagination">
+      <% if (page > 1) { %>
+        <a href="?page=<%= page - 1 %>" class="btn btn-sm">上一页</a>
+      <% } %>
+      <span>第 <%= page %> / <%= totalPages %> 页</span>
+      <% if (page < totalPages) { %>
+        <a href="?page=<%= page + 1 %>" class="btn btn-sm">下一页</a>
+      <% } %>
+    </div>
+  <% } %>
+<% } else { %>
+  <p class="text-muted">暂无帖子，快来发第一个吧！</p>
+<% } %>
+
+<%- include('../partials/footer') %>

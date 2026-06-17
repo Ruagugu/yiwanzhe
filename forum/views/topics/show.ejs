@@ -1,0 +1,255 @@
+<%- include('../partials/header') %>
+
+<div class="breadcrumb">
+  <a href="/">首页</a> /
+  <a href="/topics/category/<%= topic.category_id %>"><%= topic.category_name %></a> /
+  <span><%= topic.title %></span>
+</div>
+
+<article class="post post-first">
+  <div class="post-header">
+    <h1 class="topic-title-full"><%= topic.title %></h1>
+    <% if (topic.is_pinned) { %><span class="badge badge-pin">置顶</span><% } %>
+    <% if (topic.is_locked) { %><span class="badge badge-lock">锁定</span><% } %>
+  </div>
+  <div class="post-body">
+    <div class="post-author">
+      <a href="/user/<%= topic.username %>" data-no-transition>
+        <div class="avatar"><%= (topic.nickname || topic.username).charAt(0).toUpperCase() %></div>
+      </a>
+      <div class="author-info">
+        <a href="/user/<%= topic.username %>" data-no-transition><strong><%= topic.nickname || topic.username %></strong></a>
+        <% if (topic.role === 'admin') { %><span class="badge badge-admin">管理员</span><% } %>
+        <div class="text-muted"><%= topic.view_count %> 浏览</div>
+      </div>
+    </div>
+    <div class="post-content"><%- formatContent(topic.content) %></div>
+  </div>
+  <div class="post-footer">
+    <span class="text-muted"><%= formatTime(topic.created_at) %></span>
+    <div class="post-actions">
+      <% if (user && user.role === 'admin') { %>
+        <form method="POST" action="/topics/<%= topic.id %>/toggle-pin" style="display:inline">
+          <button type="submit" class="btn btn-sm"><%= topic.is_pinned ? '取消置顶' : '置顶' %></button>
+        </form>
+        <form method="POST" action="/topics/<%= topic.id %>/toggle-lock" style="display:inline">
+          <button type="submit" class="btn btn-sm"><%= topic.is_locked ? '解锁' : '锁定' %></button>
+        </form>
+      <% } %>
+      <% if (user && (user.role === 'admin' || user.id === topic.user_id)) { %>
+        <form method="POST" action="/topics/<%= topic.id %>/delete" style="display:inline"
+          onsubmit="return confirm('确定删除？')">
+          <button type="submit" class="btn btn-sm btn-danger">删除</button>
+        </form>
+      <% } %>
+    </div>
+  </div>
+</article>
+
+<% if (posts.length > 0) { %>
+  <h3 class="reply-count"><%= posts.length %> 条回复</h3>
+  <% posts.forEach(function(p, i) { %>
+    <div class="post" id="post-<%= p.id %>">
+      <div class="post-body">
+        <div class="post-author">
+          <a href="/user/<%= p.username %>" data-no-transition>
+            <div class="avatar"><%= (p.nickname || p.username).charAt(0).toUpperCase() %></div>
+          </a>
+          <div class="author-info">
+            <a href="/user/<%= p.username %>" data-no-transition><strong><%= p.nickname || p.username %></strong></a>
+            <% if (p.role === 'admin') { %><span class="badge badge-admin">管理员</span><% } %>
+          </div>
+        </div>
+        <div class="post-content">
+          <%- formatContent(p.content) %>
+          <% if (user && !topic.is_locked) { %>
+            <button class="btn btn-sm sub-reply-btn" data-post="<%= p.id %>" data-mention="<%= p.nickname || p.username %>" style="margin-top:8px">回复</button>
+          <% } %>
+        </div>
+      </div>
+
+      <% if (children && children[p.id] && children[p.id].length > 0) { %>
+        <div class="sub-replies">
+          <%- include('sub-reply-tree', { replies: children[p.id], children: children, userById: userById, topic: topic, user: user, depth: 0 }) %>
+        </div>
+      <% } %>
+
+      <% if (user && !topic.is_locked) { %>
+        <div class="sub-reply-form" id="sub-form-<%= p.id %>" style="display:none">
+          <form method="POST" action="/topics/<%= topic.id %>/reply">
+            <input type="hidden" name="parent_id" value="<%= p.id %>">
+            <textarea name="content" rows="2" required placeholder="回复 <%= p.nickname || p.username %>..."></textarea>
+            <button type="submit" class="btn btn-sm btn-primary">发送</button>
+            <button type="button" class="btn btn-sm cancel-sub">取消</button>
+          </form>
+        </div>
+      <% } %>
+
+      <div class="post-footer">
+        <span class="text-muted">#<%= i + 1 %> · <%= formatTime(p.created_at) %></span>
+      </div>
+    </div>
+  <% }) %>
+<% } %>
+
+<% if (user && !topic.is_locked) { %>
+  <div class="reply-form">
+    <h3>发表回复</h3>
+    <form method="POST" action="/topics/<%= topic.id %>/reply">
+      <div class="form-group">
+        <textarea name="content" rows="5" required placeholder="说点什么..."></textarea>
+      </div>
+      <button type="submit" class="btn btn-primary">回复</button>
+    </form>
+  </div>
+<% } else if (topic.is_locked) { %>
+  <div class="alert alert-error">此主题已锁定</div>
+<% } else { %>
+  <div class="alert"><a href="/auth/login">登录</a>后回复</div>
+<% } %>
+
+<script>
+(function(){
+  // 子回复按钮只切换表单显示，不再预填 @用户
+  document.querySelectorAll('.sub-reply-btn').forEach(function(btn){
+    btn.addEventListener('click', function(){
+      var pid = this.getAttribute('data-post');
+      var form = document.getElementById('sub-form-' + pid);
+      if (form) {
+        var showing = form.style.display !== 'none';
+        form.style.display = showing ? 'none' : 'block';
+        if (!showing) {
+          var ta = form.querySelector('textarea');
+          if (ta) ta.focus();
+        }
+      }
+    });
+  });
+  document.querySelectorAll('.cancel-sub').forEach(function(btn){
+    btn.addEventListener('click', function(){
+      var f = this.closest('.sub-reply-form');
+      if (f) {
+        var ta = f.querySelector('textarea');
+        if (ta) ta.value = '';
+        f.style.display = 'none';
+      }
+    });
+  });
+
+  // 回复表单：fetch 提交，POST 成功后只追加新回复到 DOM，不刷新整页
+  function escapeHtml(s) {
+    return (s || '').replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
+  }
+  function formatContent(text) {
+    return escapeHtml(text).replace(/\n/g, '<br>');
+  }
+  function linkifyMentions(html) {
+    return html.replace(/(^|[^\w一-鿿])@([\w一-鿿-]{2,20})/g, function(_, p1, name) {
+      return p1 + '<a class="mention-link" href="/user/' + name + '">@' + name + '</a>';
+    });
+  }
+
+  function handleReplyForm(form, onSuccess) {
+    form.addEventListener('submit', function(e){
+      e.preventDefault();
+      var textarea = form.querySelector('textarea[name="content"]');
+      var content = (textarea && textarea.value || '').trim();
+      if (!content) return;
+      var parentIdInput = form.querySelector('input[name="parent_id"]');
+      var parentId = parentIdInput ? parentIdInput.value : '';
+      var submitBtn = form.querySelector('button[type="submit"]');
+      if (submitBtn) { submitBtn.disabled = true; submitBtn.textContent = '发送中...'; }
+
+      var body = new URLSearchParams();
+      body.append('content', content);
+      if (parentId) body.append('parent_id', parentId);
+
+      fetch(form.action, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+        body: body.toString()
+      }).then(function(r){
+        if (!r.ok && r.status !== 302) throw new Error('HTTP ' + r.status);
+        return fetch(window.location.href, { headers: { 'X-Partial': '1' } });
+      }).then(function(r){ return r.text(); })
+        .then(function(html){
+          // 从新页面 HTML 中提取刚发的那条 post 块（按时间倒序取最新一条）
+          var parser = new DOMParser();
+          var doc = parser.parseFromString(html, 'text/html');
+          // 找到最大的 post id（即刚发的那条）
+          var posts = doc.querySelectorAll('[id^="post-"]');
+          var maxId = 0;
+          posts.forEach(function(el){
+            var m = el.id.match(/^post-(\d+)$/);
+            if (m) { var id = parseInt(m[1], 10); if (id > maxId) maxId = id; }
+          });
+          // 找到该 id 的元素
+          var newEl = doc.getElementById('post-' + maxId);
+          if (newEl && onSuccess) {
+            onSuccess(newEl, doc);
+          }
+          if (textarea) textarea.value = '';
+          if (submitBtn) { submitBtn.disabled = false; submitBtn.textContent = '发送'; }
+          // 隐藏子回复表单
+          var subForm = form.closest('.sub-reply-form');
+          if (subForm) subForm.style.display = 'none';
+        }).catch(function(err){
+          if (submitBtn) { submitBtn.disabled = false; submitBtn.textContent = '发送'; }
+          alert('发送失败: ' + err.message);
+        });
+    });
+  }
+
+  // 顶层回复表单
+  var topForm = document.querySelector('.reply-form form');
+  if (topForm) {
+    handleReplyForm(topForm, function(newEl){
+      // 顶层回复直接 append 到 reply-count 后
+      var list = document.querySelector('h3.reply-count');
+      if (list && newEl) {
+        // 找到 .reply-form 之前的最后一个 .post
+        var replyForm = document.querySelector('.reply-form');
+        var lastPost = null;
+        if (replyForm) {
+          var prev = replyForm.previousElementSibling;
+          while (prev && !prev.classList.contains('post')) prev = prev.previousElementSibling;
+          lastPost = prev;
+        }
+        if (lastPost) lastPost.insertAdjacentHTML('afterend', newEl.outerHTML);
+        else if (list) list.insertAdjacentHTML('afterend', newEl.outerHTML);
+      }
+    });
+  }
+
+  // 子回复表单
+  document.querySelectorAll('.sub-reply-form form').forEach(function(form){
+    handleReplyForm(form, function(newEl, doc){
+      var parentIdInput = form.querySelector('input[name="parent_id"]');
+      var parentId = parentIdInput ? parentIdInput.value : '';
+      if (!parentId) return;
+      // 找到当前页面的父级 sub-reply-form 容器
+      var parentSubForm = document.getElementById('sub-form-' + parentId);
+      // 找到子回复应该在的位置：父级 post 块的 .sub-replies 容器，或父级 sub-reply 的子容器
+      // 简单策略：找到 id="post-<parentId>" 元素，在其内插入
+      var parentPost = document.getElementById('post-' + parentId);
+      if (!parentPost) return;
+      // 如果是顶层 post，append 到 .sub-replies 内
+      var subReplies = parentPost.querySelector(':scope > .sub-replies');
+      if (subReplies) {
+        subReplies.insertAdjacentHTML('beforeend', newEl.outerHTML);
+      } else {
+        // 创建 .sub-replies 容器
+        var container = document.createElement('div');
+        container.className = 'sub-replies';
+        container.innerHTML = newEl.outerHTML;
+        // 插入到 post-footer 之前
+        var postFooter = parentPost.querySelector(':scope > .post-footer');
+        if (postFooter) parentPost.insertBefore(container, postFooter);
+        else parentPost.appendChild(container);
+      }
+    });
+  });
+})();
+</script>
+
+<%- include('../partials/footer') %>
